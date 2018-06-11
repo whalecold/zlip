@@ -2,7 +2,8 @@ package huffman
 
 import (
 	"algorithm/stack"
-	"fmt"
+	"utils"
+	//"fmt"
 )
 
 type HuffmanNode struct {
@@ -14,11 +15,49 @@ type HuffmanNode struct {
 }
 
 
-type HuffmanCodeMap map[byte]uint32
+type HuffmanCodeMap map[byte][]byte
+
+//最高位的offset表示0
+func (huff *HuffmanNode)readBites(b byte, offset uint32) byte {
+	move := 7 - offset
+	b = b >> move
+	b &= 0x1
+	return b
+}
+
+//return 匹配到的byte  移动的bit位数  bytes偏移位数 bit偏移位数(范围0-7)
+func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
+
+	//fmt.Printf("++++%b+++  bitOffset %v\n", bytes, bitOffset)
+	tempNode := huff
+	var bitLen uint32
+	var byteLen uint32
+	for _, value := range bytes {
+		//fmt.Printf("bitOffset %v\n", bitOffset)
+		for i := bitOffset; i < 8; i++ {
+			bitLen++
+			//fmt.Printf("%b\t", value)
+			bit := huff.readBites(value, i)
+			//fmt.Printf("------------------------------------%b\n", bit)
+
+			if bit == 0 {
+				tempNode = tempNode.LeftTree
+			} else if bit == 1 {
+				tempNode = tempNode.RightTree
+			}
+			if tempNode.Leaf == true {
+				return tempNode.Value, bitLen, byteLen, i+1
+			}
+		}
+		bitOffset = 0
+		byteLen++
+	}
+	panic("decodeByteFromHuffman failed !")
+}
 
 //在树的节点没有重复的情况下 树的前序遍历数组和中序遍历数组能建立唯一的树
 //所以这里产生两个数组 用来以后建立树
-func (huff *HuffmanNode)genSliceByPreorder() []byte {
+func (huff *HuffmanNode)genStreamByPreorder() []byte {
 	//每个叶子节点都需要有值 而且必须每个都不一样
 	// uint16高八位 1表示非叶子节点 第八位表示序号  高八位0表示叶子节点 低八位表示实际序号
 	preorderSlice := make([]byte, 0, 512)
@@ -45,7 +84,7 @@ func (huff *HuffmanNode)genSliceByPreorder() []byte {
 }
 
 //获取中序遍历数据
-func (huff *HuffmanNode)genSliceByInorder() []byte {
+func (huff *HuffmanNode)genStreamByInorder() []byte {
 	inorderSlice := make([]byte, 0, 512)
 
 	s := stack.NewStack()
@@ -77,20 +116,11 @@ func (huff *HuffmanNode)genSliceByInorder() []byte {
 func buildTreeBySlice(pre, in []byte) *HuffmanNode {
 	preShort := transUint16Byte(pre)
 	inShort := transUint16Byte(in)
-	//fmt.Printf("len pre %v len in %v\n", len(preShort), len(inShort))
-	for _, value := range preShort {
-		fmt.Printf("%v  \t", value)
-	}
-	fmt.Printf("\n")
-
-	for _, value := range inShort {
-		fmt.Printf("%v  \t", value)
-	}
-	fmt.Printf("\n")
 
 	return buildTreeByOrder(preShort, inShort)
 }
 
+//根据前序遍历和中序遍历建立一个新的树
 func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
 	if 0 == len(pre) || 0 == len(in) {
 		return nil
@@ -103,56 +133,28 @@ func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
 		Value: byte(midNumber & 0xFF),
 	}
 
-
 	//这里的1表示是否是叶子节点
-	fmt.Printf("mid hight %v\n", midNumber)
+	//fmt.Printf("mid hight %v\n", midNumber)
 	if (midNumber & uint16(0xff00)) == 0 {
 		root.Leaf = true
 	} else {
 		root.Leaf = false
 	}
 
-
-	for _, value := range in {
-		fmt.Printf("%v  \t", value)
-	}
-	fmt.Printf("\n")
 	for i := 0; i < len(in); i++ {
 		if midNumber == in[i] {
 			midIndex = i
-			fmt.Printf("------in  %v midIndex %v\n", midNumber, midIndex)
 			break
 		}
 	}
-	fmt.Printf("value : %v leaf %v mid %v  minNumber %v\n", root.Value, root.Leaf, midIndex, midNumber)
-
+	//fmt.Printf("value : %v leaf %v mid %v  minNumber %v\n", root.Value, root.Leaf, midIndex, midNumber)
 
 	if midIndex == len(in) {
 		return root
 	}
 
-	//
-	//inleft := make([]uint16, 0, 10)
-	//preleft := make([]uint16, 0, 10)
-	//
-	//inright := make([]uint16, 0, 10)
-	//preright := make([]uint16, 0, 10)
-	//
-	//for i := 0; i < midIndex; i++ {
-	//	inleft = append(inleft, in[i])
-	//	preleft = append(preleft, pre[i+1])
-	//}
-	//
-	//for i := midIndex + 1; i < len(pre); i++ {
-	//	inright = append(inright, in[i])
-	//	preright = append(preright, pre[i])
-	//}
-
 	leftChild := buildTreeByOrder(pre[1:midIndex+1], in[:midIndex])
 	rightChild := buildTreeByOrder(pre[midIndex+1:], in[midIndex+1:])
-
-	//leftChild := buildTreeByOrder(preleft, inleft)
-	//rightChild := buildTreeByOrder(preright, inright)
 
 	root.LeftTree = leftChild
 	root.RightTree = rightChild
@@ -186,30 +188,35 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	s.Push(huff)
 
 
-	var huffmanCode uint32
+	//var huffmanCode uint32
 	//var huffmanCodeSkip uint32
 
-
-
+	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
 		//fmt.Printf("len : %v\n", s.Len())
 		tree := s.Pop().(*HuffmanNode)
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
 			tree.LeftTree = nil
-			huffmanCode = huffmanCode << 1
-			huffmanCode &=  ^uint32(0x1)
+			//huffmanCode = huffmanCode << 1
+			//huffmanCode &=  ^uint32(0x1)
+			huffmanCode = append(huffmanCode, 0)
 		} else if tree.RightTree != nil {
 			s.Push(tree.RightTree)
 			tree.RightTree = nil
-			huffmanCode = huffmanCode << 1
-			huffmanCode |= 0x1
+			//huffmanCode = huffmanCode << 1
+			//huffmanCode |= 0x1
+
+			huffmanCode = append(huffmanCode, 1)
 		} else {
 			s.RPop()
 			if tree.Leaf == true {
-				m[tree.Value] = huffmanCode
+				m[tree.Value] = *utils.DeepClone(&huffmanCode).(*[]byte)
+				//fmt.Printf("----value %v huffmanCode : %v\n", tree.Value, huffmanCode)
 			}
-			huffmanCode = huffmanCode >> 1
+			if len(huffmanCode) > 0 {
+				huffmanCode = huffmanCode[:len(huffmanCode)-1]
+			}
 		}
 	}
 	return m

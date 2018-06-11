@@ -1,5 +1,5 @@
 package huffman
 
-func Encode(bytes []byte) []byte {
-	return bytes
-}
+//func Encode(bytes []byte) []byte {
+//	return bytes
+//}
