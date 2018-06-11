@@ -19,16 +19,20 @@ func TestDecode(t *testing.T) {
 
 	//huffman := EnCode([]byte("364343435"))
 	//bytes := []byte("Hello World")
-	bytes := []byte("Also known as advanced fee fraud (AFF), 4-1-9 scams`" +
-		" are named after the section of the Nigerian penal code that deals with `" +
-			"fraud. Although originally originating in Nigeria these scams can originate `" +
-				"from anywhere. If you fall for one of these at best you will lose thousands of dollars; `" +
-					"at worst you will lose your life. These usually start with an email from a bank official or `" +
-						"the relative of a recently deceased African president or a government minister informing you that `" +
-							"they have access to millions of dollars but need your help to get the money out of the country. The `" +
-								"end result is that when the deal is threatened you will be asked for money to secure the release of `" +
-									"the funds. Do not under any circumstances reply to these letters, people have been murdered while `" +
-										"following up with these scams.")
+	//bytes := []byte("hwo")
+	//bytes := []byte("h23131")
+	//bytes := []byte("h2")
+	bytes := []byte("h2398391")
+	//bytes := []byte("Also known as advanced fee fraud (AFF), 4-1-9 scams`" +
+	//	" are named after the section of the Nigerian penal code that deals with `" +
+	//		"fraud. Although originally originating in Nigeria these scams can originate `" +
+	//			"from anywhere. If you fall for one of these at best you will lose thousands of dollars; `" +
+	//				"at worst you will lose your life. These usually start with an email from a bank official or `" +
+	//					"the relative of a recently deceased African president or a government minister informing you that `" +
+	//						"they have access to millions of dollars but need your help to get the money out of the country. The `" +
+	//							"end result is that when the deal is threatened you will be asked for money to secure the release of `" +
+	//								"the funds. Do not under any circumstances reply to these letters, people have been murdered while `" +
+	//									"following up with these scams.")
 	//bytes := []byte("这棵树也称为码树，其实就是码表的一种形式化描述，每个节点（除了叶子节点）都会分出两个分支，左分支代表比特0，右边分支代表1，`" +
 	//	"	从根节点到叶子节点的一个比特序列就是码字。因为只有叶子节点可以是码字，所以这样也符合一个码字不能是另一个码字的前缀这一原则。`" +
 	//		"说到这里，可以说一下另一个话题，就是一个映射表map在内存中怎么存储，没有相关经验的可以跳过，map实现的是key-->value这样的一个表，`" +

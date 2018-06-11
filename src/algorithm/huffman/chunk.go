@@ -3,7 +3,6 @@ package huffman
 import (
 	"algorithm/stack"
 	"utils"
-	//"fmt"
 )
 
 type HuffmanNode struct {
@@ -80,6 +79,7 @@ func (huff *HuffmanNode)genStreamByPreorder() []byte {
 			stack_node.Push(node.LeftTree)
 		}
 	}
+	//fmt.Printf("--- %v\n", preorderSlice)
 	return preorderSlice
 }
 
@@ -112,10 +112,28 @@ func (huff *HuffmanNode)genStreamByInorder() []byte {
 	return inorderSlice
 }
 
+//TODO 待优化这种序列化方式占用的空间有点高
+func (huff *HuffmanNode)serializeTree() []byte {
+	pre := huff.genStreamByPreorder()
+	in := huff.genStreamByInorder()
+	serialize := make([]byte, 0, len(pre) + len(in))
+	serialize = append(serialize, pre...)
+	serialize = append(serialize, in...)
+	//fmt.Printf("pre : %v  in %v\n", pre, in)
+	return serialize
+}
+
 //根据上面获得的两个数组来建立一个数
 func buildTreeBySlice(pre, in []byte) *HuffmanNode {
 	preShort := transUint16Byte(pre)
 	inShort := transUint16Byte(in)
+
+	return buildTreeByOrder(preShort, inShort)
+}
+
+func buildTreeBySerialize(serial []byte, size uint32) *HuffmanNode {
+	preShort := transUint16Byte(serial[:size/2])
+	inShort := transUint16Byte(serial[size/2:])
 
 	return buildTreeByOrder(preShort, inShort)
 }
@@ -187,7 +205,7 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	s := stack.NewStack()
 	s.Push(huff)
 
-
+	//var byteSize byte
 	//var huffmanCode uint32
 	//var huffmanCodeSkip uint32
 

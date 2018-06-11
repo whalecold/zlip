@@ -2,6 +2,7 @@ package huffman
 
 import (
 	"sort"
+	//"fmt"
 )
 
 //因为码树节点左右分支旋转不会影响压缩程度 所有huffman树有很多表示
@@ -25,6 +26,11 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 		huffmanSlice[0] = newNode
 		huffmanSlice = append(huffmanSlice[:1], huffmanSlice[2:]...)
 		sort.Sort(huffmanSlice)
+
+		//for _, v := range huffmanSlice {
+		//	fmt.Printf("%p \t", *v)
+		//}
+		//fmt.Printf("\n")
 	}
 
 
@@ -52,7 +58,7 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 
 //构建huffmans树
 func buildHuffmanTree(bytes []byte) *HuffmanNode {
-
+	//fmt.Printf("bytes %v\n", bytes)
 	huffmanMap := make(map[byte]*HuffmanNode)
 	for _, value := range bytes {
 		if m, ok := huffmanMap[value]; ok {
@@ -73,6 +79,11 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 		huffmanSlice = append(huffmanSlice, v)
 	}
 	sort.Sort(huffmanSlice)
+
+	//for _, v := range huffmanSlice {
+	//	fmt.Printf("%p \t", *v)
+	//}
+	//fmt.Printf("\n")
 
 	return buildTree(huffmanSlice)
 }

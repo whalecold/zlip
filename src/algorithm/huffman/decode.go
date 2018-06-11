@@ -40,26 +40,22 @@ func decodeTest(bytes []byte) []byte {
 }
 
 func EnCode(bytes []byte) []byte {
-	root := buildHuffmanTree(bytes)
 
-	pre := root.genStreamByPreorder()
-	in := root.genStreamByInorder()
+	root := buildHuffmanTree(bytes)
+	serial := root.serializeTree()
 	m := root.transTreeToHuffmanCodeMap()
 
-
-
-	treeLen := len(pre) + len(in)
+	treeLen := len(serial)
 	fmt.Printf("treeLen %v\n", treeLen)
 	head := make([]byte, 4)
 	binary.BigEndian.PutUint32(head, uint32(treeLen))
 
 
-	huffmanBuffer := make([]byte, 0, len(bytes) + len(head) + len(pre) + len(in) + 4)
+	huffmanBuffer := make([]byte, 0, len(bytes) + len(head) + treeLen + 4)
 	huffmanBuffer = append(huffmanBuffer, head...)
 
 
-	huffmanBuffer = append(huffmanBuffer, pre...)
-	huffmanBuffer = append(huffmanBuffer, in...)
+	huffmanBuffer = append(huffmanBuffer, serial...)
 
 	var tempBype byte
 	var bitIndex uint8
@@ -91,7 +87,8 @@ func EnCode(bytes []byte) []byte {
 
 	//表示tempBype中还有数据
 	if bitIndex != 0 {
-		bitIndex = 7 - bitIndex
+		//fmt.Printf("tail-----%08b index %v\n", tempBype, bitIndex)
+		bitIndex = 8 - bitIndex
 		tempBype = tempBype << bitIndex
 		bitBuffer = append(bitBuffer, tempBype)
 	}
@@ -104,7 +101,7 @@ func EnCode(bytes []byte) []byte {
 
 
 	huffmanBuffer = append(huffmanBuffer, bitBuffer...)
-	//fmt.Printf("++++++treeLen %b\n", bitBuffer)
+	//fmt.Printf("++++++bitLen %v  stream %08b\n", bitLen, bitBuffer)
 	return huffmanBuffer
 }
 
@@ -117,7 +114,8 @@ func Decode(bytes []byte) []byte {
 
 	//fmt.Printf("treeLen %v\n", treeLen)
 
-	root := buildTreeBySlice(bytes[offset:offset + treeLen/2], bytes[offset + treeLen/2:offset + treeLen])
+	root := buildTreeBySerialize(bytes[offset:offset + treeLen], treeLen)
+	root.serializeTree()
 	offset += treeLen
 	bitLen := binary.BigEndian.Uint32(bytes[offset:offset+4])
 	offset += 4
@@ -127,7 +125,7 @@ func Decode(bytes []byte) []byte {
 
 	var tempLen uint32
 	var bitOffset uint32
-	fmt.Printf("   len %v  data %b\n", len(bytes[offset:]), bytes[offset:])
+	//fmt.Printf("   len %v  data %b\n", len(bytes[offset:]), bytes[offset:])
 	for tempLen < bitLen {
 		b, l, o, bi := root.decodeByteFromHuffman(bytes[offset:], bitOffset)
 		//fmt.Printf("\n------------------result %c  offset %v\n", b, bi)
