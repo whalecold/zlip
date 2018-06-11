@@ -13,10 +13,28 @@ type HuffmanNode struct {
 	Leaf	bool 		//表示是否是叶子节点
 }
 
+type HuffmanNodeSlice []*HuffmanNode
 
+func (h HuffmanNodeSlice)Less(i, j int) bool {
+	if h[i].Power != h[j].Power {
+		return h[i].Power < h[j].Power
+	} else {
+		return h[i].Value < h[j].Value
+	}
+}
+
+func (h HuffmanNodeSlice)Swap(i, j int) {
+	h[i], h[j] = h[j], h[i]
+}
+
+func (h HuffmanNodeSlice)Len() int {
+	return len(h)
+}
+
+//huffman编码表
 type HuffmanCodeMap map[byte][]byte
 
-//最高位的offset表示0
+//offset0表示最高位
 func (huff *HuffmanNode)readBites(b byte, offset uint32) byte {
 	move := 7 - offset
 	b = b >> move
@@ -24,10 +42,9 @@ func (huff *HuffmanNode)readBites(b byte, offset uint32) byte {
 	return b
 }
 
-//return 匹配到的byte  移动的bit位数  bytes偏移位数 bit偏移位数(范围0-7)
+//return 匹配到的byte | 移动的bit位数 | bytes偏移位数 | bit偏移位数(范围0-7)
 func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
 
-	//fmt.Printf("++++%b+++  bitOffset %v\n", bytes, bitOffset)
 	tempNode := huff
 	var bitLen uint32
 	var byteLen uint32
@@ -48,9 +65,11 @@ func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (b
 				return tempNode.Value, bitLen, byteLen, i+1
 			}
 		}
+		//备注 :这里bitOffset 需要清0 之前落了导致bug
 		bitOffset = 0
 		byteLen++
 	}
+	//走到这个肯定是程序出错了 找不到对应字符串是不能发生的
 	panic("decodeByteFromHuffman failed !")
 }
 
@@ -130,7 +149,7 @@ func buildTreeBySlice(pre, in []byte) *HuffmanNode {
 
 	return buildTreeByOrder(preShort, inShort)
 }
-
+//反序列化
 func buildTreeBySerialize(serial []byte, size uint32) *HuffmanNode {
 	preShort := transUint16Byte(serial[:size/2])
 	inShort := transUint16Byte(serial[size/2:])
@@ -180,6 +199,7 @@ func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
 	return root
 }
 
+//因为是两个字节表示一个数
 func transUint16Byte(bytes []byte) []uint16 {
 	if len(bytes) % 2 == 1 {
 		panic("buildTreeBySlice param error!")
@@ -196,6 +216,7 @@ func transUint16Byte(bytes []byte) []uint16 {
 }
 
 
+//调用这个函数会破坏树的结构
 //https://blog.csdn.net/gatieme/article/details/51163010
 func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	if huff == nil {
@@ -204,10 +225,6 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	m := make(HuffmanCodeMap)
 	s := stack.NewStack()
 	s.Push(huff)
-
-	//var byteSize byte
-	//var huffmanCode uint32
-	//var huffmanCodeSkip uint32
 
 	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
@@ -230,7 +247,6 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 			s.RPop()
 			if tree.Leaf == true {
 				m[tree.Value] = *utils.DeepClone(&huffmanCode).(*[]byte)
-				//fmt.Printf("----value %v huffmanCode : %v\n", tree.Value, huffmanCode)
 			}
 			if len(huffmanCode) > 0 {
 				huffmanCode = huffmanCode[:len(huffmanCode)-1]
@@ -242,22 +258,4 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 
 func (huff *HuffmanNode)Printf() {
 
-}
-
-type HuffmanNodeSlice []*HuffmanNode
-
-func (h HuffmanNodeSlice)Less(i, j int) bool {
-	if h[i].Power != h[j].Power {
-		return h[i].Power < h[j].Power
-	} else {
-		return h[i].Value < h[j].Value
-	}
-}
-
-func (h HuffmanNodeSlice)Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
-}
-
-func (h HuffmanNodeSlice)Len() int {
-	return len(h)
 }

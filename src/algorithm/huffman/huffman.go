@@ -10,7 +10,7 @@ import (
 func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 	//fmt.Printf("tree len : %v\n", len(huffmanSlice))
 	if len(huffmanSlice) == 0 {
-		return nil
+		panic("buildTree param length is zero!")
 	}
 
 	index := byte(0)
