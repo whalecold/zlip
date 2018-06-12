@@ -1,7 +1,7 @@
 package huffman
 
 import (
-	"fmt"
+	//"fmt"
 	"encoding/binary"
 )
 
