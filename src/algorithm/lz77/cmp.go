@@ -54,13 +54,14 @@ func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 //因为len(bytes)返回的是int 文件大小可能超过 所以长度用新的uint64参数表示
 //第一个返回的map表示literal/length 出现的次数 第二个表示distance出现的次数 会对length和distance做一定的优化
 //映射参考 doc里面的两张图
-func Lz77Cmp(bytes []byte, size uint64) ([]byte, map[uint16]int, map[byte]int) {
+//([]byte, map[uint16]int, map[byte]int)
+func Lz77Cmp(bytes []byte, size uint64) []uint16 {
 	if len(bytes) < LZ77_MinCmpSize * 2 {
 		panic("func cmp bytes need large than 3")
 	}
 
-	lliMap := make(map[uint16]int)
-	disMap := make(map[byte]int)
+	//lliMap := make(map[uint16]int)
+	//disMap := make(map[byte]int)
 
 	result := make([]byte, 0, 1024)
 	result = append(result, bytes[:LZ77_MinCmpSize]...)

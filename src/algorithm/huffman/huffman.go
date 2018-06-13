@@ -2,7 +2,8 @@ package huffman
 
 import (
 	"sort"
-	//"fmt"
+
+	"container/list"
 )
 
 //因为码树节点左右分支旋转不会影响压缩程度 所有huffman树有很多表示
@@ -34,7 +35,7 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 	}
 
 
-	return huffmanSlice[0]
+	return transDeflateTree(huffmanSlice[0])
 	//if len(huffmanSlice) < 2 {
 	//	panic("buildTree need params longer than 2")
 	//}
@@ -54,6 +55,70 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 	//	root = node
 	//}
 	//return root
+}
+
+
+//把huffman树转成deflate树
+func transDeflateTree(root *HuffmanNode) *HuffmanNode {
+
+	var nextLen int
+	var thisLen int
+
+	l := list.New()
+	l.PushBack(root)
+	li := list.New()
+	thisLen = 1
+	for {
+		element := l.Front()
+		if element == nil {
+			break
+		}
+
+		node := element.Value.(*HuffmanNode)
+		li.PushBack(node)
+		//fmt.Printf("node : %v \n", node.Value)
+
+		l.Remove(element)
+
+		if node.LeftTree != nil {
+			l.PushBack(node.LeftTree)
+			nextLen++
+		}
+
+		if node.RightTree != nil {
+			l.PushBack(node.RightTree)
+			nextLen++
+		}
+		thisLen--
+
+		if 0 == thisLen {
+			thisLen = nextLen
+			nextLen = 0
+
+			ele := li.Back()
+			moveDeflateTree(ele)
+			li = list.New()
+		}
+	}
+	return root
+}
+
+//把某一层的树移到最右边
+func moveDeflateTree(ele *list.Element) {
+	var emptyEle *list.Element
+	for temp := ele; temp != nil; temp = temp.Prev() {
+		tempNode := temp.Value.(*HuffmanNode)
+		if tempNode.RightTree == nil && emptyEle == nil {
+			emptyEle = temp
+		} else if tempNode.RightTree != nil && emptyEle != nil {
+			emptyNode := emptyEle.Value.(*HuffmanNode)
+			emptyNode.RightTree, tempNode.RightTree = tempNode.RightTree, nil
+			emptyNode.LeftTree, tempNode.LeftTree = tempNode.LeftTree, nil
+			emptyNode.Value, tempNode.Value = tempNode.Value, emptyNode.Value
+			emptyNode.Leaf, tempNode.Leaf = tempNode.Leaf, emptyNode.Leaf
+			emptyEle = temp
+		}
+	}
 }
 
 //构建huffmans树
