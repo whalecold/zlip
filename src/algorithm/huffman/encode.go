@@ -3,6 +3,7 @@ package huffman
 import (
 	//"fmt"
 	"encoding/binary"
+	"fmt"
 )
 
 func EnCode(bytes []byte) []byte {
@@ -10,6 +11,10 @@ func EnCode(bytes []byte) []byte {
 	root := buildHuffmanTree(bytes)
 	serial := root.serializeTree()
 	m := root.transTreeToHuffmanCodeMap()
+
+	for key, value := range m {
+		fmt.Printf("%c %v\n", key, value)
+	}
 
 	treeLen := len(serial)
 	//fmt.Printf("treeLen %v\n", treeLen)

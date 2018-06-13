@@ -32,7 +32,7 @@ func TestLz77Cmp(t *testing.T) {
 	//sre := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	fmt.Printf("result : %v\n", string(sre))
 	fmt.Printf("result : %v\n", len(sre))
-	re := lz77Cmp(sre, uint64(len(sre)))
+	re := Lz77Cmp(sre, uint64(len(sre)))
 	fmt.Printf("result : %v\n", string(re))
 	//lz77Cmp([]byte("1322232111231"), int64(len([]byte("1322232111231"))))
 }

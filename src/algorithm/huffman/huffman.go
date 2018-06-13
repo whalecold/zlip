@@ -87,3 +87,5 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 
 	return buildTree(huffmanSlice)
 }
+
+
