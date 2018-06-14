@@ -16,3 +16,5 @@
 > - 到现在为止增加了lz77算法 把huffman树转成了deflate树
 > - deflate树信息转字节流和反转基本跑通测试了
 > - `todo` distance树好了 literal/length树还没好 但基本上也就是时间问题啦
+> - 增加了几个测试用例
+> - 添加对字节流的编解码

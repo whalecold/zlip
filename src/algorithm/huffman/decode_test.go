@@ -52,9 +52,16 @@ func TestDecode(t *testing.T) {
 
 	//fmt.Printf("deHuffman %b\n", huffman[:4])
 	deHuffman := Decode(huffman)
-	fmt.Printf("deHuffman %s\n", string(deHuffman))
+	//fmt.Printf("deHuffman %s\n", string(deHuffman))
 
 	h := md5.New()
-	fmt.Printf("before md5 %v  \nafter md5 %v\n", h.Sum(bytes), h.Sum(deHuffman))
+	befor := h.Sum(bytes)
+	after :=  h.Sum(deHuffman)
+	for index, value := range befor {
+		if value != after[index] {
+			t.Error("编解吗错误")
+		}
+	}
+	//fmt.Printf("before md5 %v  \nafter md5 %v\n", h.Sum(bytes), h.Sum(deHuffman))
 	//Decode([]byte("we will we will r u"))
 }

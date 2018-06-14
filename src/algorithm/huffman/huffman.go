@@ -213,7 +213,7 @@ func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 		for i := 0; i < len(streamTemp[index]); i++ {
 			bytes := make([]byte, index)
 			for t := 0; t < index; t++ {
-				bytes[index-1-t] = ReadBit(tempCode, uint(t))
+				bytes[index-1-t] = ReadBitLow(tempCode, uint(t))
 			}
 			m[streamTemp[index][i]] = bytes
 			tempCode++
@@ -222,6 +222,58 @@ func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 		flag = true
 	}
 	return m
+}
+
+//建立deflate树根据map
+func buildDeflatTreeByMap(m DeflateCodeMap) *HuffmanNode {
+
+	root := &HuffmanNode{}
+	var temp *HuffmanNode
+	for k, v := range m {
+		temp = root
+		for index, bit := range v {
+			if bit == 0 {
+				if temp.LeftTree != nil && index == len(v) - 1{
+					panic("buildDeflatTreeByMap error LeftTree")
+				}
+				if temp.LeftTree != nil && index != len(v) - 1 && temp.LeftTree.Leaf == true {
+					panic("buildDeflatTreeByMap error LeftTree 2")
+				}
+				if temp.LeftTree != nil {
+					temp = temp.LeftTree
+				} else {
+					newTemp := &HuffmanNode{}
+					temp.LeftTree = newTemp
+					temp = newTemp
+					if index == len(v)-1 {
+						temp.Value = k
+						temp.Leaf = true
+					}
+				}
+			} else if bit == 1 {
+				if temp.RightTree != nil && index == len(v) - 1{
+					panic("buildDeflatTreeByMap error RightTree")
+				}
+				if temp.RightTree != nil && index != len(v) - 1 && temp.RightTree.Leaf == true {
+					panic("buildDeflatTreeByMap error RightTree 2")
+				}
+				if temp.RightTree != nil {
+					temp = temp.RightTree
+				} else {
+					newTemp := &HuffmanNode{}
+					temp.RightTree = newTemp
+					temp = newTemp
+					if index == len(v)-1 {
+						temp.Value = k
+						temp.Leaf = true
+					}
+				}
+			} else {
+				panic("buildDeflatTreeByMap error")
+			}
+		}
+	}
+	return root
 }
 
 

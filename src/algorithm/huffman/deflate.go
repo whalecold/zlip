@@ -53,6 +53,7 @@ func GetZoneByLength(distance uint16) (uint16, uint16, uint16) {
 	return  getZoneByData(distance, lengthZone)
 }
 
+//返回 bits扩展位置 最小值
 func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16){
 	for _, value := range data {
 		if value[3] == zone {
@@ -79,8 +80,8 @@ func getMaxDeepth(bits []byte) int {
 	return int(max)
 }
 
-//bit 范围 0-31
-func ReadBit(num int, bit uint) byte {
+//bit 范围 0-31 0表示最低位 从最低位开始读
+func ReadBitLow(num int, bit uint) byte {
 	if bit >= 32 {
 		panic("readBit error")
 	}
@@ -91,5 +92,95 @@ func ReadBit(num int, bit uint) byte {
 	} else {
 		return 1
 	}
+}
 
+//offset0表示最高位 从高位开始读 [0,7]
+func readBitsHigh(b byte, offset uint32) byte {
+	if offset > 7 {
+		panic("readBitsHigh error offset")
+	}
+	move := 7 - offset
+	b = b >> move
+	b &= 0x1
+	return b
+}
+
+//offset0表示最高位 从高位开始读 [0,15]
+func readBitsHigh16(b uint16, offset uint32) byte {
+	if offset > 15 {
+		panic("readBitsHigh error offset")
+	}
+	move := 15 - offset
+	b = b >> move
+	b &= 0x1
+	return byte(b)
+}
+
+//offset0表示最高位 从高位开始写 [0,7]
+func WriteBitsHigh(b *byte, offset uint32, n byte) byte {
+	if offset > 7 {
+		panic("WriteBitsHigh error offset")
+	}
+	if n != 0 && n != 1 {
+		panic("WriteBitsHigh error n")
+	}
+
+	i := n << uint32(7 - offset)
+	c := readBitsHigh(*b, uint32(offset))
+	if c == 0 {
+		*b = *b | i
+	} else {
+		if n == 0 {
+			i = ^i
+			*b = *b & i
+		}
+	}
+	return *b
+}
+
+//从bytes bitOffset readLen位数据 返回 值 byte偏移 bits偏移
+func readBitsLen(bytes []byte, bitOffset uint32, readLen uint16) (uint16, uint32, uint32) {
+	var byteLen uint32
+	var getLen uint16
+	var result uint16
+	for _, value := range bytes {
+		for ; bitOffset < 8; bitOffset++ {
+			bit := readBitsHigh(value, bitOffset)
+			result = result << 1
+			//result = result ^ uint16(bit)
+			result = result | uint16(bit)
+			getLen++
+			if getLen >= readLen {
+				return result, byteLen, bitOffset + 1
+			}
+		}
+		bitOffset = 0
+		byteLen++
+	}
+	//走到这个肯定是程序出错了 找不到对应字符串是不能发生的
+	panic("readBitsLen failed !")
+}
+
+
+func CompareTwoBytes(l , m []byte) bool {
+	if len(l) != len(m) {
+		return false
+	}
+	for index, value := range l {
+		if value != m[index] {
+			return false
+		}
+	}
+	return true
+}
+
+func checkBytesFull(bytes *[]byte, offset *uint32) bool {
+	if *offset == 8 {
+		*offset = 0
+		var b byte
+		*bytes = append(*bytes, b)
+		return true
+	} else {
+		return false
+	}
 }

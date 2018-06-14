@@ -64,25 +64,47 @@ func (deflate *DeflateDisTree)BuildMap() {
 	deflate.dishuffMap = deflate.node.transTreeToDeflateCodeMap()
 }
 
-//returs bitstream bitslen uint64只是个放bits的流载体
-func (deflate *DeflateDisTree)EnCodeDistance(dis uint16) (uint64, int){
+//returs offset 表示bytes[0]的位偏移 return  | bit偏移 | byte 偏移
+func (deflate *DeflateDisTree)EnCodeDistance(dis uint16, bytes *[]byte, offset uint32, dataSet *uint64) (uint32){
+	if offset > 7 {
+		panic("EnCodeDistance error param offset")
+	}
 	zone, bitLen, lower := GetZoneByDis(dis)
 	zoneBits, ok  := deflate.dishuffMap[zone]
 	if !ok {
 		panic("EnCodeDistance error param")
 	}
-	var bits uint64
-	var length int
-	//var offset uint
 	for _, value := range zoneBits {
-		bits = bits << 1
-		bits ^= uint64(value)
-		length++
+		WriteBitsHigh(&(*bytes)[*dataSet], offset, value)
+		offset++
+		if checkBytesFull(bytes, &offset) == true {
+			*dataSet ++
+		}
 	}
+
 	sur := dis % lower
-	bits = bits << bitLen
-	bits += uint64(sur)
-	return bits, length + int(bitLen)
+	//fmt.Printf("sur %v lower %v\n", sur, lower)
+	for i := 16-bitLen; i < 16; i++ {
+		v := readBitsHigh16(sur, uint32(i))
+		WriteBitsHigh(&(*bytes)[*dataSet], offset, v)
+		offset++
+		if checkBytesFull(bytes, &offset) == true {
+			*dataSet++
+		}
+	}
+	return  offset
+}
+
+//传入参数 bytes bits流 offset第一个字节之后的偏移位置
+//return 第1个返回实际距离 第2个参数表示返回字节偏移  第二个参数表示bits偏移
+//return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7)
+func (deflate *DeflateDisTree)DecodeDistance(bytes []byte, offset uint32) (uint16, uint32, uint32) {
+	code, off, bits := deflate.node.decodeCodeDeflate(bytes, offset)
+	bitsLen, lower := GetDisByData(code)
+	dis, o, bits := readBitsLen(bytes[off:], bits, bitsLen)
+	//fmt.Printf("dis %v  lower %v\n", dis, lower)
+	dis += lower
+	return dis, off + o, bits
 }
 
 //根据位数来重新获得码表
@@ -91,7 +113,7 @@ func (deflate *DeflateDisTree)BuildCodeMapByBits(bits  []byte) {
 }
 
 func (deflate *DeflateDisTree)BuildTreeByMap() {
-	//deflate.node = buildDeflatTreeByMap(deflate.dishuffMap)
+	deflate.node = buildDeflatTreeByMap(deflate.dishuffMap)
 }
 
 func (deflate *DeflateDisTree)Print() {

@@ -35,13 +35,6 @@ func (h HuffmanNodeSlice)Len() int {
 type HuffmanCodeMap map[byte][]byte
 type DeflateCodeMap map[uint16][]byte
 
-//offset0表示最高位
-func (huff *HuffmanNode)readBites(b byte, offset uint32) byte {
-	move := 7 - offset
-	b = b >> move
-	b &= 0x1
-	return b
-}
 
 //return 匹配到的byte | 移动的bit位数 | bytes偏移位数 | bit偏移位数(范围0-7)
 func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
@@ -51,19 +44,50 @@ func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (b
 	var byteLen uint32
 	for _, value := range bytes {
 		//fmt.Printf("bitOffset %v\n", bitOffset)
-		for i := bitOffset; i < 8; i++ {
+		for ; bitOffset < 8; bitOffset++ {
 			bitLen++
 			//fmt.Printf("%b\t", value)
-			bit := huff.readBites(value, i)
+			bit := readBitsHigh(value, bitOffset)
 			//fmt.Printf("------------------------------------%b\n", bit)
 
 			if bit == 0 {
 				tempNode = tempNode.LeftTree
 			} else if bit == 1 {
 				tempNode = tempNode.RightTree
+			} else {
+				panic("decodeByteFromHuffman error bit")
 			}
 			if tempNode.Leaf == true {
-				return byte(tempNode.Value), bitLen, byteLen, i+1
+				return byte(tempNode.Value), bitLen, byteLen, bitOffset+1
+			}
+		}
+		//备注 :这里bitOffset 需要清0 之前落了导致bug
+		bitOffset = 0
+		byteLen++
+	}
+	//走到这个肯定是程序出错了 找不到对应字符串是不能发生的
+	panic("decodeByteFromHuffman failed !")
+}
+
+//上面那个是之前测试用的
+//return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7)
+func (huff *HuffmanNode)decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uint32, uint32) {
+
+	tempNode := huff
+	var byteLen uint32
+	for _, value := range bytes {
+		for ; bitOffset < 8; bitOffset++ {
+			bit := readBitsHigh(value, bitOffset)
+
+			if bit == 0 {
+				tempNode = tempNode.LeftTree
+			} else if bit == 1 {
+				tempNode = tempNode.RightTree
+			} else {
+				panic("decodeByteFromHuffman error bit")
+			}
+			if tempNode.Leaf == true {
+				return tempNode.Value, byteLen, bitOffset+1
 			}
 		}
 		//备注 :这里bitOffset 需要清0 之前落了导致bug
