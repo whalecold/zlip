@@ -5,7 +5,7 @@ import "fmt"
 //deflate 构建distance树
 
 //{min max distance, bits, code}
-var distanceZone = [][]int{
+var distanceZone = [][]uint16{
 					{1, 1, 0, 0}, {2, 2, 0, 1}, {3, 3, 0, 2}, {4, 4, 0, 3},
 					{5, 6, 1, 4}, {7, 8, 1, 5},
 					{9, 12, 2, 6}, {13, 16, 2, 7}, {17, 24, 3, 8}, {25, 32, 3, 9},
@@ -22,7 +22,7 @@ var distanceZone = [][]int{
 
 
 //{min max length, bits, code}
-var lengthZone = [][]int{
+var lengthZone = [][]uint16{
 	{3, 3, 0, 257}, {4, 4, 0, 258}, {5, 5, 0, 259}, {6, 6, 0, 260},
 	{7, 7, 0, 261}, {8, 8, 0, 262},
 	{9, 9, 0, 263}, {10, 10, 0, 264}, {11, 12, 1, 265}, {13, 14, 1, 266},
@@ -36,7 +36,7 @@ var lengthZone = [][]int{
 
 
 //{zone, bits lower}
-func getZoneByData(distance uint16, data [][]int) (int, int, int){
+func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16){
 	for _, value := range data {
 		if distance <= uint16(value[1]) {
 			return value[3], value[2], value[0]
@@ -45,14 +45,15 @@ func getZoneByData(distance uint16, data [][]int) (int, int, int){
 	panic(fmt.Sprintf("getZoneByDistance : error param %v", distance))
 }
 
-func GetZoneByDis(distance uint16) (int, int, int) {
+//{zone, bits lower}
+func GetZoneByDis(distance uint16) (uint16, uint16, uint16) {
 	return  getZoneByData(distance, distanceZone)
 }
-func GetZoneByLength(distance uint16) (int, int, int) {
+func GetZoneByLength(distance uint16) (uint16, uint16, uint16) {
 	return  getZoneByData(distance, lengthZone)
 }
 
-func getDataByZone(zone int, data [][]int) (int, int){
+func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16){
 	for _, value := range data {
 		if value[3] == zone {
 			return value[2], value[0]
@@ -61,9 +62,34 @@ func getDataByZone(zone int, data [][]int) (int, int){
 	panic(fmt.Sprintf("getDistanceByZone : error param %v", zone))
 }
 
-func GetDisByData(zone uint16) (int, int) {
-	return  getDataByZone(int(zone), distanceZone)
+func GetDisByData(zone uint16) (uint16, uint16) {
+	return  getDataByZone(zone, distanceZone)
 }
-func GetLengthByData(zone uint16)(int, int) {
-	return  getDataByZone(int(zone), lengthZone)
+func GetLengthByData(zone uint16)(uint16, uint16) {
+	return  getDataByZone(zone, lengthZone)
+}
+
+func getMaxDeepth(bits []byte) int {
+	var max byte
+	for _, value := range bits {
+		if value > max {
+			max = value
+		}
+	}
+	return int(max)
+}
+
+//bit 范围 0-31
+func ReadBit(num int, bit uint) byte {
+	if bit >= 32 {
+		panic("readBit error")
+	}
+	//var temp int
+	temp := 1 << bit
+	if num & temp == 0{
+		return 0
+	} else {
+		return 1
+	}
+
 }

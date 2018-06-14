@@ -7,7 +7,7 @@ import (
 
 type HuffmanNode struct {
 	Power 	int32 	//权重 叶子节点相当于出现次数
-	Value 	byte
+	Value 	uint16
 	LeftTree *HuffmanNode
 	RightTree *HuffmanNode
 	Leaf	bool 		//表示是否是叶子节点
@@ -33,6 +33,7 @@ func (h HuffmanNodeSlice)Len() int {
 
 //huffman编码表
 type HuffmanCodeMap map[byte][]byte
+type DeflateCodeMap map[uint16][]byte
 
 //offset0表示最高位
 func (huff *HuffmanNode)readBites(b byte, offset uint32) byte {
@@ -62,7 +63,7 @@ func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (b
 				tempNode = tempNode.RightTree
 			}
 			if tempNode.Leaf == true {
-				return tempNode.Value, bitLen, byteLen, i+1
+				return byte(tempNode.Value), bitLen, byteLen, i+1
 			}
 		}
 		//备注 :这里bitOffset 需要清0 之前落了导致bug
@@ -88,7 +89,7 @@ func (huff *HuffmanNode)genStreamByPreorder() []byte {
 		} else {
 			preorderSlice = append(preorderSlice, 1)
 		}
-		preorderSlice = append(preorderSlice, node.Value)
+		preorderSlice = append(preorderSlice, byte(node.Value))
 
 		if node.RightTree != nil {
 			stack_node.Push(node.RightTree)
@@ -123,7 +124,7 @@ func (huff *HuffmanNode)genStreamByInorder() []byte {
 			} else {
 				inorderSlice = append(inorderSlice, 1)
 			}
-			inorderSlice = append(inorderSlice, node.Value)
+			inorderSlice = append(inorderSlice, byte(node.Value))
 
 			node = node.RightTree
 		}
@@ -167,7 +168,7 @@ func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
 	midIndex := 0
 
 	root := &HuffmanNode{
-		Value: byte(midNumber & 0xFF),
+		Value: uint16(midNumber & 0xFF),
 	}
 
 	//这里的1表示是否是叶子节点
@@ -228,7 +229,6 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 
 	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
-		//fmt.Printf("len : %v\n", s.Len())
 		tree := s.Pop().(*HuffmanNode)
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
@@ -242,6 +242,38 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 			//huffmanCode = huffmanCode << 1
 			//huffmanCode |= 0x1
 
+			huffmanCode = append(huffmanCode, 1)
+		} else {
+			s.RPop()
+			if tree.Leaf == true {
+				m[byte(tree.Value)] = *utils.DeepClone(&huffmanCode).(*[]byte)
+			}
+			if len(huffmanCode) > 0 {
+				huffmanCode = huffmanCode[:len(huffmanCode)-1]
+			}
+		}
+	}
+	return m
+}
+
+func (huff *HuffmanNode)transTreeToDeflateCodeMap() DeflateCodeMap {
+	if huff == nil {
+		return nil
+	}
+	m := make(DeflateCodeMap)
+	s := stack.NewStack()
+	s.Push(huff)
+
+	huffmanCode := make([]byte, 0, 64)
+	for s.Len() != 0 {
+		tree := s.Pop().(*HuffmanNode)
+		if tree.LeftTree != nil {
+			s.Push(tree.LeftTree)
+			tree.LeftTree = nil
+			huffmanCode = append(huffmanCode, 0)
+		} else if tree.RightTree != nil {
+			s.Push(tree.RightTree)
+			tree.RightTree = nil
 			huffmanCode = append(huffmanCode, 1)
 		} else {
 			s.RPop()
