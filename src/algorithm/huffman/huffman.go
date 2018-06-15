@@ -32,7 +32,6 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 		sort.Sort(huffmanSlice)
 	}
 
-
 	return transDeflateTree(huffmanSlice[0], moveDeflateTree)
 }
 
@@ -94,10 +93,6 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 	emptyList := list.New() 	//存储空节点的队列
 	for temp := ele; temp != nil; temp = temp.Prev() {
 		tempNode := temp.Value.(*HuffmanNode)
-
-		//if deepth == 3 {
-		//	fmt.Printf("tempNode %v\n", tempNode.Value)
-		//}
 
 		if tempNode.Leaf == true && tempNode.LeftTree == nil {
 			leafNodeNum++
@@ -185,15 +180,12 @@ func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 	}
 	m := make(DeflateCodeMap)
 	deepth := getMaxDeepth(bits)
-	//fmt.Printf("cap ------%v \n", deepth)
 	streamTemp := make([][]uint16, deepth + 1)
 	for index := 0; index < len(streamTemp); index++ {
 		streamTemp[index] = make([]uint16, 0, 32)
 	}
 
 	for index, value := range bits {
-		//fmt.Printf("value --------- %v\n", value)
-		//fmt.Printf("cap %v \n", cap(streamTemp[value]))
 		if value != 0 {
 			streamTemp[value] = append(streamTemp[value], uint16(index))
 		}

@@ -85,7 +85,6 @@ func ReadBitLow(num int, bit uint) byte {
 	if bit >= 32 {
 		panic("readBit error")
 	}
-	//var temp int
 	temp := 1 << bit
 	if num & temp == 0{
 		return 0
@@ -116,7 +115,7 @@ func readBitsHigh16(b uint16, offset uint32) byte {
 	return byte(b)
 }
 
-//offset0表示最高位 从高位开始写 [0,7]
+//offset0表示最高位 从高位开始写 [0,7] 把某一位置为 n
 func WriteBitsHigh(b *byte, offset uint32, n byte) byte {
 	if offset > 7 {
 		panic("WriteBitsHigh error offset")
@@ -126,14 +125,10 @@ func WriteBitsHigh(b *byte, offset uint32, n byte) byte {
 	}
 
 	i := n << uint32(7 - offset)
-	c := readBitsHigh(*b, uint32(offset))
-	if c == 0 {
+	if n == 1 {
 		*b = *b | i
 	} else {
-		if n == 0 {
-			i = ^i
-			*b = *b & i
-		}
+		*b = *b & (^i)
 	}
 	return *b
 }
@@ -177,8 +172,7 @@ func CompareTwoBytes(l , m []byte) bool {
 func checkBytesFull(bytes *[]byte, offset *uint32) bool {
 	if *offset == 8 {
 		*offset = 0
-		var b byte
-		*bytes = append(*bytes, b)
+		*bytes = append(*bytes, byte(0))
 		return true
 	} else {
 		return false

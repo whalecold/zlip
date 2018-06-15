@@ -156,7 +156,7 @@ func (huff *HuffmanNode)genStreamByInorder() []byte {
 	return inorderSlice
 }
 
-//TODO 待优化这种序列化方式占用的空间有点高
+//待优化这种序列化方式占用的空间有点高 这只是自己想的存储码表的方式 实际不采用这种方式
 func (huff *HuffmanNode)serializeTree() []byte {
 	pre := huff.genStreamByPreorder()
 	in := huff.genStreamByInorder()
@@ -241,7 +241,7 @@ func transUint16Byte(bytes []byte) []uint16 {
 }
 
 
-//调用这个函数会破坏树的结构
+//调用这个函数会破坏树的结构 后序遍历
 //https://blog.csdn.net/gatieme/article/details/51163010
 func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	if huff == nil {
@@ -257,15 +257,10 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
 			tree.LeftTree = nil
-			//huffmanCode = huffmanCode << 1
-			//huffmanCode &=  ^uint32(0x1)
 			huffmanCode = append(huffmanCode, 0)
 		} else if tree.RightTree != nil {
 			s.Push(tree.RightTree)
 			tree.RightTree = nil
-			//huffmanCode = huffmanCode << 1
-			//huffmanCode |= 0x1
-
 			huffmanCode = append(huffmanCode, 1)
 		} else {
 			s.RPop()
@@ -280,6 +275,7 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	return m
 }
 
+//调用这个函数会破坏树的结构
 func (huff *HuffmanNode)transTreeToDeflateCodeMap() DeflateCodeMap {
 	if huff == nil {
 		return nil

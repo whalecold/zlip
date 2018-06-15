@@ -40,7 +40,7 @@ func (deflate *DeflateDisTree)AddDisElement(distance uint16) {
 		}
 	}
 }
-
+//建立deflate树
 func (deflate *DeflateDisTree)BuildTree() {
 	huffmanSlice := make(HuffmanNodeSlice, 0, len(deflate.m))
 	for _, v := range deflate.m {
@@ -50,7 +50,8 @@ func (deflate *DeflateDisTree)BuildTree() {
 	deflate.node = buildTree(huffmanSlice)
 }
 
-func (deflate *DeflateDisTree)BuildBitsStream() {
+//根据字码映射表获取字节流 相当于是序列化
+func (deflate *DeflateDisTree)SerializeBitsStream() {
 	deflate.bits = make([]byte, len(distanceZone))
 	for k, v := range deflate.dishuffMap {
 		if int(k) >= len(deflate.bits) {
@@ -60,6 +61,7 @@ func (deflate *DeflateDisTree)BuildBitsStream() {
 	}
 }
 
+//根据deflate获取 字码映射表
 func (deflate *DeflateDisTree)BuildMap() {
 	deflate.dishuffMap = deflate.node.transTreeToDeflateCodeMap()
 }
@@ -83,7 +85,6 @@ func (deflate *DeflateDisTree)EnCodeDistance(dis uint16, bytes *[]byte, offset u
 	}
 
 	sur := dis % lower
-	//fmt.Printf("sur %v lower %v\n", sur, lower)
 	for i := 16-bitLen; i < 16; i++ {
 		v := readBitsHigh16(sur, uint32(i))
 		WriteBitsHigh(&(*bytes)[*dataSet], offset, v)
@@ -107,11 +108,12 @@ func (deflate *DeflateDisTree)DecodeDistance(bytes []byte, offset uint32) (uint1
 	return dis, off + o, bits
 }
 
-//根据位数来重新获得码表
-func (deflate *DeflateDisTree)BuildCodeMapByBits(bits  []byte) {
+//根据位数来重新获得码表映射
+func (deflate *DeflateDisTree)UnSerializeBitsStream(bits  []byte) {
 	deflate.dishuffMap = buildCodeMapByBits(bits)
 }
 
+//根据码表map建立deflate树
 func (deflate *DeflateDisTree)BuildTreeByMap() {
 	deflate.node = buildDeflatTreeByMap(deflate.dishuffMap)
 }

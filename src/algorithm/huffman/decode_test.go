@@ -46,11 +46,9 @@ func TestDecode(t *testing.T) {
 									"了ZIP的核心了，那就是码树应该怎么缩小，以及码树怎么记录的问题。")
 	//bytes := []byte("111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111")
 	huffman := EnCode(bytes)
-	//huffman := EnCode([]byte())
 
 	fmt.Printf("before length [%v]  after length [%v]\n", len(bytes), len(huffman))
 
-	//fmt.Printf("deHuffman %b\n", huffman[:4])
 	deHuffman := Decode(huffman)
 	//fmt.Printf("deHuffman %s\n", string(deHuffman))
 
