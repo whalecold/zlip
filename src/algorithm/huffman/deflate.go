@@ -81,11 +81,11 @@ func getMaxDeepth(bits []byte) int {
 }
 
 //bit 范围 0-31 0表示最低位 从最低位开始读
-func ReadBitLow(num int, bit uint) byte {
+func ReadBitLow(num uint32, bit uint) byte {
 	if bit >= 32 {
 		panic("readBit error")
 	}
-	temp := 1 << bit
+	temp := uint32(1 << bit)
 	if num & temp == 0{
 		return 0
 	} else {

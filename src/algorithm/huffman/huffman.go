@@ -174,6 +174,50 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 }
 
 //根据位数来重新获得码表
+//
+//
+//https://blog.csdn.net/jison_r_wang/article/details/52071841
+/*
+	deflate树:1、右边一定比左边深
+			  2、同一深度的子节点 右边的值一定比左边的大
+	N 表示节点
+    l 表示子节点 后面的数字表示具体的值
+				                  根节点
+							0/                  \1
+							N                  --N--
+						0/     \1         0/            \1
+						l:4    l:12       N              N
+										0/  \1       0/        \1
+										l:3  l:9     l:19       N
+														   0/       \1
+												          N          N
+													    0/  \1    0/    \1
+                                                      l:1   l:23  l:17  l:27
+						原码          码表       长度
+					    4		--   00			2
+						12 		--   01			2
+						3 		--   100		3
+						9 		--   101		3
+						19		--	 110		3
+						1		-- 	 11100		5
+						23 		-- 	 11101		5
+						17 		-- 	 11110		5
+						27 		-- 	 11111		5
+	在序列化的时候记录码表的长度 然后用下标记录原码 这里就有两份信息了 长度所需要的比特位小于原来的值 就达到了压缩的目的
+	原码的具体信息在表 distanceZone 里面的具体数值是现成找来的 总共有30个 返回是 [0, 29]
+	所以记录下来的值就是如下
+	0 5 0 3 | 2 0 0 0 | 0 0 0 0 | 2 0 0 0 | 0 5 0 0 | 0 0 0 5 | 0 0 0 5 | 0 0
+
+	然后是根据这个信息反推出原码映射表 这里用到了deflate的两个特性
+	1、整棵树最左边叶子节点的码字为0（码字长度视情况而定）
+	2、树深为（n+1）时，该层最左面的叶子节点的值为，树深为n的这一层最左面的叶子节点的值加上该层所有叶子节点的个数，然后变长一位（即左移一位）。
+ 可以对照上面的树验证一下
+
+	按照上面的规则 长度(len)最短之中下标(index)最小的那个值就可以得到一个映射  index   -- 0 * len (这里的*表示个数)
+也就是 4 -- 00 ， 然后根据`同一深度的子节点 右边的值一定比左边的大` 这一特性 找到 12  -- 01 的映射
+	接下来看树深(n) 加1的值 根据上面的规则 3 -- (00 + 这一层的个数) << 1  得到 100  下面的以此类推
+
+ */
 func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 	if len(bits) != len(distanceZone) {
 		panic(fmt.Sprintf("BuildTreeByBits error length %v", len(bits)))
@@ -181,36 +225,37 @@ func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 	m := make(DeflateCodeMap)
 	deepth := getMaxDeepth(bits)
 	streamTemp := make([][]uint16, deepth + 1)
-	for index := 0; index < len(streamTemp); index++ {
-		streamTemp[index] = make([]uint16, 0, 32)
+	for l := 0; l < len(streamTemp); l++ {
+		streamTemp[l] = make([]uint16, 0, 32)
 	}
 
-	for index, value := range bits {
-		if value != 0 {
-			streamTemp[value] = append(streamTemp[value], uint16(index))
+	for sourceCode, huffmanLen := range bits {
+		if huffmanLen != 0 {
+			streamTemp[huffmanLen] = append(streamTemp[huffmanLen], uint16(sourceCode))
 		}
 	}
 
-	//表示是否出现了长度不为0的值 这里的index表示长度 这里是根据deflate的规律来的
+	//表示是否出现了长度不为0的值 这里的index表示huffman码的长度 这里是根据deflate的规律来的
 	flag := false
-	var lastCode, lastLength int
-	for index := 1; index < len(streamTemp); index++ {
-		if len(streamTemp[index]) == 0 && flag == false{
+	//记录树深(n-1)的第一个码的值和长度
+	var lastCode, lastLength uint32
+	for huffmanLen := 1; huffmanLen < len(streamTemp); huffmanLen++ {
+		if len(streamTemp[huffmanLen]) == 0 && flag == false{
 			continue
 		}
 		//deflate树的最左边的节点始终为0
 		lastCode = (lastCode + lastLength) << 1
 		tempCode := lastCode
 
-		for i := 0; i < len(streamTemp[index]); i++ {
-			bytes := make([]byte, index)
-			for t := 0; t < index; t++ {
-				bytes[index-1-t] = ReadBitLow(tempCode, uint(t))
+		for i := 0; i < len(streamTemp[huffmanLen]); i++ {
+			bytes := make([]byte, huffmanLen)
+			for t := 0; t < huffmanLen; t++ {
+				bytes[huffmanLen-1-t] = ReadBitLow(tempCode, uint(t))
 			}
-			m[streamTemp[index][i]] = bytes
+			m[streamTemp[huffmanLen][i]] = bytes
 			tempCode++
 		}
-		lastLength = len(streamTemp[index])
+		lastLength = uint32(len(streamTemp[huffmanLen]))
 		flag = true
 	}
 	return m

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"fmt"
 	"time"
+	"unsafe"
 )
 
 func TestDeflateDisTree2(t *testing.T) {
@@ -41,6 +42,8 @@ func TestDeflateDisTree2(t *testing.T) {
 	if false == newTree2.Equal(newTree) {
 		t.Error("过程不对")
 	}
+
+	fmt.Printf("size : %v\n", unsafe.Sizeof(uint16(10)))
 }
 
 //测试树的序列化和反序列化 已经对一个distance的解码与反解码

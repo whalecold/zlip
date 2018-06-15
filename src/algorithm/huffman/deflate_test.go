@@ -5,7 +5,7 @@ import (
 )
 
 func TestReadBitLow(t *testing.T) {
-	num := 0x2107
+	num := uint32(0x2107)
 	//10 0001 0000 0111
 	if ReadBitLow(num, 0) != 1 ||
 		ReadBitLow(num, 1) != 1 ||
