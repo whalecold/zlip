@@ -55,7 +55,7 @@ func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 //第一个返回的map表示literal/length 出现的次数 第二个表示distance出现的次数 会对length和distance做一定的优化
 //映射参考 doc里面的两张图
 //([]byte, map[uint16]int, map[byte]int)
-func Lz77Cmp(bytes []byte, size uint64) []uint16 {
+func Lz77Cmp(bytes []byte, size uint64) []byte {
 	if len(bytes) < LZ77_MinCmpSize * 2 {
 		panic("func cmp bytes need large than 3")
 	}
