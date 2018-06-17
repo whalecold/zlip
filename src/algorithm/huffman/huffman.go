@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	"container/list"
-	"fmt"
+	"utils"
 )
 
 //因为码树节点左右分支旋转不会影响压缩程度 所有huffman树有很多表示
@@ -219,9 +219,7 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 
  */
 func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
-	if len(bits) != len(distanceZone) {
-		panic(fmt.Sprintf("BuildTreeByBits error length %v", len(bits)))
-	}
+
 	m := make(DeflateCodeMap)
 	deepth := getMaxDeepth(bits)
 	streamTemp := make([][]uint16, deepth + 1)
@@ -250,7 +248,7 @@ func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 		for i := 0; i < len(streamTemp[huffmanLen]); i++ {
 			bytes := make([]byte, huffmanLen)
 			for t := 0; t < huffmanLen; t++ {
-				bytes[huffmanLen-1-t] = ReadBitLow(tempCode, uint(t))
+				bytes[huffmanLen-1-t] = utils.ReadBitLow(tempCode, uint(t))
 			}
 			m[streamTemp[huffmanLen][i]] = bytes
 			tempCode++

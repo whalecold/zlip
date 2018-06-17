@@ -1,4 +1,4 @@
-package huffman
+package utils
 
 import (
 	"testing"
@@ -26,14 +26,15 @@ func TestReadBitLow(t *testing.T) {
 func TestReadBitsHigh(t *testing.T) {
 	//0xB6
 	//1011 0110
-	if readBitsHigh(0xB6, 0) != 1 ||
-		readBitsHigh(0xB6, 1) != 0 ||
-		readBitsHigh(0xB6, 2) != 1 ||
-		readBitsHigh(0xB6, 3) != 1 ||
-		readBitsHigh(0xB6, 4) != 0 ||
-		readBitsHigh(0xB6, 5) != 1 ||
-		readBitsHigh(0xB6, 6) != 1 ||
-		readBitsHigh(0xB6, 7) != 0 {
+	if ReadBitsHigh(0xB6, 0) != 1 ||
+		ReadBitsHigh(0xB6, 1) != 0 ||
+		ReadBitsHigh(0xB6, 2) != 1 ||
+		ReadBitsHigh(0xB6, 3) != 1 ||
+		ReadBitsHigh(0xB6, 4) != 0 ||
+		ReadBitsHigh(0xB6, 5) != 1 ||
+		ReadBitsHigh(0xB6, 6) != 1 ||
+		ReadBitsHigh(0xB6, 7) != 0 {
 		t.Error("函数测试没通过")
 	}
 }
+

@@ -5,7 +5,7 @@ import "fmt"
 //deflate 构建distance树
 
 //{min max distance, bits, code}
-var distanceZone = [][]uint16{
+var DistanceZone = [][]uint16{
 					{1, 1, 0, 0}, {2, 2, 0, 1}, {3, 3, 0, 2}, {4, 4, 0, 3},
 					{5, 6, 1, 4}, {7, 8, 1, 5},
 					{9, 12, 2, 6}, {13, 16, 2, 7}, {17, 24, 3, 8}, {25, 32, 3, 9},
@@ -22,7 +22,7 @@ var distanceZone = [][]uint16{
 
 
 //{min max length, bits, code}
-var lengthZone = [][]uint16{
+var LengthZone = [][]uint16{
 	{3, 3, 0, 257}, {4, 4, 0, 258}, {5, 5, 0, 259}, {6, 6, 0, 260},
 	{7, 7, 0, 261}, {8, 8, 0, 262},
 	{9, 9, 0, 263}, {10, 10, 0, 264}, {11, 12, 1, 265}, {13, 14, 1, 266},
@@ -42,15 +42,16 @@ func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16){
 			return value[3], value[2], value[0]
 		}
 	}
-	panic(fmt.Sprintf("getZoneByDistance : error param %v", distance))
+	panic(fmt.Sprintf("getZoneByDistance : error param %v " +
+		"(check if init)", distance))
 }
 
 //{zone, bits lower}
 func GetZoneByDis(distance uint16) (uint16, uint16, uint16) {
-	return  getZoneByData(distance, distanceZone)
+	return  getZoneByData(distance, DistanceZone)
 }
 func GetZoneByLength(distance uint16) (uint16, uint16, uint16) {
-	return  getZoneByData(distance, lengthZone)
+	return  getZoneByData(distance, LengthZone)
 }
 
 //返回 bits扩展位置 最小值
@@ -64,10 +65,10 @@ func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16){
 }
 
 func GetDisByData(zone uint16) (uint16, uint16) {
-	return  getDataByZone(zone, distanceZone)
+	return  getDataByZone(zone, DistanceZone)
 }
 func GetLengthByData(zone uint16)(uint16, uint16) {
-	return  getDataByZone(zone, lengthZone)
+	return  getDataByZone(zone, LengthZone)
 }
 
 func getMaxDeepth(bits []byte) int {
@@ -79,83 +80,6 @@ func getMaxDeepth(bits []byte) int {
 	}
 	return int(max)
 }
-
-//bit 范围 0-31 0表示最低位 从最低位开始读
-func ReadBitLow(num uint32, bit uint) byte {
-	if bit >= 32 {
-		panic("readBit error")
-	}
-	temp := uint32(1 << bit)
-	if num & temp == 0{
-		return 0
-	} else {
-		return 1
-	}
-}
-
-//offset0表示最高位 从高位开始读 [0,7]
-func readBitsHigh(b byte, offset uint32) byte {
-	if offset > 7 {
-		panic("readBitsHigh error offset")
-	}
-	move := 7 - offset
-	b = b >> move
-	b &= 0x1
-	return b
-}
-
-//offset0表示最高位 从高位开始读 [0,15]
-func readBitsHigh16(b uint16, offset uint32) byte {
-	if offset > 15 {
-		panic("readBitsHigh error offset")
-	}
-	move := 15 - offset
-	b = b >> move
-	b &= 0x1
-	return byte(b)
-}
-
-//offset0表示最高位 从高位开始写 [0,7] 把某一位置为 n
-func WriteBitsHigh(b *byte, offset uint32, n byte) byte {
-	if offset > 7 {
-		panic("WriteBitsHigh error offset")
-	}
-	if n != 0 && n != 1 {
-		panic("WriteBitsHigh error n")
-	}
-
-	i := n << uint32(7 - offset)
-	if n == 1 {
-		*b = *b | i
-	} else {
-		*b = *b & (^i)
-	}
-	return *b
-}
-
-//从bytes bitOffset readLen位数据 返回 值 byte偏移 bits偏移
-func readBitsLen(bytes []byte, bitOffset uint32, readLen uint16) (uint16, uint32, uint32) {
-	var byteLen uint32
-	var getLen uint16
-	var result uint16
-	for _, value := range bytes {
-		for ; bitOffset < 8; bitOffset++ {
-			bit := readBitsHigh(value, bitOffset)
-			result = result << 1
-			//result = result ^ uint16(bit)
-			result = result | uint16(bit)
-			getLen++
-			if getLen >= readLen {
-				return result, byteLen, bitOffset + 1
-			}
-		}
-		bitOffset = 0
-		byteLen++
-	}
-	//走到这个肯定是程序出错了 找不到对应字符串是不能发生的
-	panic("readBitsLen failed !")
-}
-
 
 func CompareTwoBytes(l , m []byte) bool {
 	if len(l) != len(m) {
