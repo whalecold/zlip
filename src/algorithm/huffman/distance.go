@@ -15,3 +15,7 @@ func (d *Distance)GetSourceCode(code uint16, data [][]uint16)  (uint16, uint16, 
 	p1, p2 := getDataByZone(code, data)
 	return p1, p2, false
 }
+
+func (d *Distance)GetBitsLen(data [][]uint16) int {
+	return len(data)
+}

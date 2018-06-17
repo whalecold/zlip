@@ -53,6 +53,25 @@ func WriteBitsHigh(b *byte, offset uint32, n byte) byte {
 	return *b
 }
 
+//offset0表示最高位 从高位开始写 [0,15] 把某一位置为 n
+func WriteBitsHigh16(b *uint16, offset uint32, n uint16) uint16 {
+	if offset > 15 {
+		panic("WriteBitsHigh error offset")
+	}
+	if n != 0 && n != 1 {
+		panic("WriteBitsHigh error n")
+	}
+
+	if n == 1 {
+		i := n << uint32(15 - offset)
+		*b = *b | i
+	} else {
+		i := uint16(1 << uint32(15 - offset))
+		*b = *b & (^i)
+	}
+	return *b
+}
+
 //从bytes bitOffset readLen位数据 返回 值 byte偏移 bits偏移
 func ReadBitsLen(bytes []byte, bitOffset uint32, readLen uint16) (uint16, uint32, uint32) {
 	if readLen == 0 {

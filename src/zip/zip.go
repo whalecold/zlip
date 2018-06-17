@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 	"io"
-	"algorithm/huffman"
+	"algorithm/lz77"
 )
 
 func main() {
@@ -34,9 +34,11 @@ func main() {
 
 	var newBuffer []byte
 	if *decode == true {
-		newBuffer = huffman.Decode(buffer)
+		//newBuffer = huffman.Decode(buffer)
+		newBuffer = lz77.UnLz77Compress(buffer)
 	} else {
-		newBuffer = huffman.EnCode(buffer)
+		//newBuffer = huffman.EnCode(buffer)
+		newBuffer = lz77.Lz77Compress(buffer, uint64(fileSize))
 	}
 
 	dFile, err := os.OpenFile(*destFile, os.O_WRONLY|os.O_CREATE, 0666)

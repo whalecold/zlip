@@ -20,19 +20,19 @@ func TestDeflateTree2(t *testing.T) {
 	}
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream()
+	tree.SerializeBitsStream(disTree)
 	//tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
 	newTree := &DeflateTree{}
 	newTree.Init(DistanceZone)
-	newTree.UnSerializeBitsStream(tree.bits)
+	newTree.UnSerializeBitsStream(tree.bits, disTree)
 	newTree.BuildTreeByMap()
-	newTree.SerializeBitsStream()
+	newTree.SerializeBitsStream(disTree)
 
 	newTree2 := DeflateTree{}
 	newTree2.Init(DistanceZone)
-	newTree2.UnSerializeBitsStream(tree.bits)
+	newTree2.UnSerializeBitsStream(tree.bits, disTree)
 	//newTree2.Print()
 	//newTree.Print()
 
@@ -71,20 +71,20 @@ func TestDeflateTreeRandom(t *testing.T) {
 
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream()
+	tree.SerializeBitsStream(disTree)
 	//tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
 	newTree := &DeflateTree{}
 	newTree.Init(DistanceZone)
-	newTree.UnSerializeBitsStream(tree.bits)
+	newTree.UnSerializeBitsStream(tree.bits, disTree)
 	newTree.BuildTreeByMap()
-	newTree.SerializeBitsStream()
+	newTree.SerializeBitsStream(disTree)
 	//newTree.Print()
 
 	newTree2 := DeflateTree{}
 	newTree2.Init(DistanceZone)
-	newTree2.UnSerializeBitsStream(tree.bits)
+	newTree2.UnSerializeBitsStream(tree.bits, disTree)
 	//newTree2.Print()
 	if false == newTree.Equal(tree) {
 		t.Error("过程不对")
@@ -131,13 +131,13 @@ func TestDeflateTree3(t *testing.T)  {
 	tree.AddElement(5, disTree, false)
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream()
+	tree.SerializeBitsStream(disTree)
 
 	newTree := &DeflateTree{}
 	newTree.Init(DistanceZone)
-	newTree.UnSerializeBitsStream(tree.bits)
+	newTree.UnSerializeBitsStream(tree.bits, disTree)
 	newTree.BuildTreeByMap()
-	newTree.SerializeBitsStream()
+	newTree.SerializeBitsStream(disTree)
 
 	code := make([]byte, 1, 32)
 	testDis := make([]uint16, 0, 12)

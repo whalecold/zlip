@@ -24,3 +24,7 @@ func (l *Literal)GetSourceCode(code uint16, data [][]uint16)  (uint16, uint16, b
 		return p1, p2, true
 	}
 }
+
+func (l *Literal)GetBitsLen(data [][]uint16) int {
+	return 256 + 1 + len(data)
+}

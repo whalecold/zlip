@@ -9,4 +9,5 @@ const (
 	LZ77_MinCmpSize 	= 3
 	LZ77_MaxCmpNum 		= 16 					//最大比较次数
 	LZ77_MaxCmpLength 	= 256 					//最大比较长度
+	LZ77_EndFlag 		= 256 					//最大比较长度
 )
