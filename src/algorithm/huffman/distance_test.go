@@ -64,10 +64,10 @@ func TestDeflateTreeRandom(t *testing.T) {
 	tree.Init(DistanceZone)
 	disTree := &Distance{}
 	for _, value := range dis {
-		tree.AddElement(value, disTree, false)
+		tree.AddElement(value, false)
 	}
-	tree.AddElement(3, disTree, false)
-	tree.AddElement(2, disTree, false)
+	tree.AddElement(3, false)
+	tree.AddElement(2, false)
 
 	tree.BuildTree()
 	tree.BuildMap()
@@ -77,14 +77,14 @@ func TestDeflateTreeRandom(t *testing.T) {
 
 	newTree := &DeflateTree{}
 	newTree.Init(DistanceZone)
-	newTree.UnSerializeBitsStream(tree.bits, disTree)
+	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
-	newTree.SerializeBitsStream(disTree)
+	newTree.SerializeBitsStream()
 	//newTree.Print()
 
 	newTree2 := DeflateTree{}
 	newTree2.Init(DistanceZone)
-	newTree2.UnSerializeBitsStream(tree.bits, disTree)
+	newTree2.UnSerializeBitsStream(tree.bits)
 	//newTree2.Print()
 	if false == newTree.Equal(tree) {
 		t.Error("过程不对")
@@ -99,10 +99,9 @@ func TestDeflateTreeRandom(t *testing.T) {
 	code := make([]byte, 1, 32)
 
 	var offset uint64
-	newTree.EnCodeElement(testDis, &code, 0, &offset,
-		disTree, false)
+	newTree.EnCodeElement(testDis, &code, 0, &offset, false)
 	fmt.Printf("offset ..  %v\n", offset)
-	getData, _, _, _ := newTree.DecodeEle(code, 0, disTree)
+	getData, _, _, _ := newTree.DecodeEle(code, 0)
 
 	if getData != testDis {
 		t.Error("过程不对")

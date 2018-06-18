@@ -4,7 +4,6 @@ import (
 	//"fmt"
 	"algorithm/huffman"
 	"encoding/binary"
-	"fmt"
 )
 
 
@@ -123,8 +122,8 @@ func UnLz77Compress(bytes []byte) []byte {
 	var offset uint64
 	headLen := binary.BigEndian.Uint16(bytes[:2])
 	offset += 2
-	headInfo := bytes[offset:offset+uint64(headLen)]
-	fmt.Printf("head info %v\n", string(headInfo))
+	//headInfo := bytes[offset:offset+uint64(headLen)]
+	//fmt.Printf("head info %v\n", string(headInfo))
 	offset += uint64(headLen)
 
 	huffman3Len := binary.BigEndian.Uint16(bytes[offset:offset+2])
