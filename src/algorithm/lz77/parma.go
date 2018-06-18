@@ -10,4 +10,14 @@ const (
 	LZ77_MaxCmpNum 		= 16 					//最大比较次数
 	LZ77_MaxCmpLength 	= 256 					//最大比较长度
 	LZ77_EndFlag 		= 256 					//最大比较长度
+	LZ77_HeadInfo 		= "zls1129@gmail.com version 1.0.1"
+)
+
+const (
+	RLC_Length		= 3 					//游程编码最小匹配长度
+	RLC_Special		= 17 					//特殊字符
+	RLC_MaxLength	= 18					//最大长度
+	RLC_Zero		= 0						//特殊字符
+	RLC_EndFlag   	= 255
+
 )

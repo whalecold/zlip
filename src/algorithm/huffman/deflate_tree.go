@@ -16,10 +16,10 @@ type DelateBitsArray []*DelateBitsStreamInfo
 
 //通用接口
 type DeflateCommon interface{
-	GetZoneData(uint16, [][]uint16, bool)  (uint16, uint16, uint16)
+	GetZoneData(uint16, bool)  (uint16, uint16, uint16)
 	//bool 表示是否是长度
-	GetSourceCode(uint16, [][]uint16)  (uint16, uint16, bool)
-	GetBitsLen(data [][]uint16) int
+	GetSourceCode(uint16)  (uint16, uint16, bool)
+	GetBitsLen() int
 }
 
 type DeflateTree struct {
@@ -27,7 +27,7 @@ type DeflateTree struct {
 	dishuffMap DeflateCodeMap	//这个是区间码到huffman字节码的映射表
 	node *HuffmanNode 	//deflate树的根节点
 	bits []byte //deflate树转成bits流的长度 用来存文件
-	extraCode [][]uint16	//码表
+	condition DeflateCommon
 }
 
 func (deflate *DeflateTree)BitesLen() uint32 {
@@ -38,17 +38,15 @@ func (deflate *DeflateTree)GetBits() []byte {
 	return deflate.bits
 }
 
-func (deflat *DeflateTree)Init(extra [][]uint16) {
+func (deflat *DeflateTree)Init() {
 	deflat.m = make(map[uint16]*HuffmanNode)
 	deflat.dishuffMap = make(map[uint16][]byte)
-	deflat.extraCode = extra
 }
 
-func (deflate *DeflateTree)AddElement(element uint16, common DeflateCommon,
-										length bool) {
+func (deflate *DeflateTree)AddElement(element uint16, length bool) {
 
 	//zone, _, _ := getZoneByData(element, deflate.extraCode)
-	zone, _, _ := common.GetZoneData(element, deflate.extraCode, length)
+	zone, _, _ := deflate.condition.GetZoneData(element, length)
 	//fmt.Printf("zone-------- %v\n", zone)
 	if m, ok := deflate.m[zone]; ok {
 		m.Power++
@@ -73,16 +71,20 @@ func (deflate *DeflateTree)BuildTree() {
 }
 
 //根据字码映射表获取字节流 相当于是序列化
-func (deflate *DeflateTree)SerializeBitsStream(common DeflateCommon) {
-	deflate.bits = make([]byte, common.GetBitsLen(deflate.extraCode))
+func (deflate *DeflateTree)SerializeBitsStream() {
+	//max := 0
+	deflate.bits = make([]byte, deflate.condition.GetBitsLen())
 	for k, v := range deflate.dishuffMap {
-		if int(k) >= common.GetBitsLen(deflate.extraCode) {
+		if int(k) >= deflate.condition.GetBitsLen() {
 			panic("BuildBitsStream error should be less than 30")
 		}
 		//fmt.Printf("+++++++ %v  %v", k, v)
 		deflate.bits[k] = byte(len(v))
+		//if len(v) > max {
+		//	max = len(v)
+		//}
 	}
-	//fmt.Printf("--%v\n", deflate.bits)
+	//fmt.Printf("max-------%v\n", max)
 }
 
 //根据deflate获取 字码映射表
@@ -95,12 +97,11 @@ func (deflate *DeflateTree)EnCodeElement(ele uint16,
 										bytes *[]byte,
 										offset uint32,
 										dataSet *uint64,
-										common DeflateCommon,
 									 	length bool ) (uint32){
 	if offset > 7 {
 		panic("EnCodeDistance error param offset")
 	}
-	zone, bitLen, lower := common.GetZoneData(ele, deflate.extraCode, length)
+	zone, bitLen, lower := deflate.condition.GetZoneData(ele, length)
 	zoneBits, ok  := deflate.dishuffMap[zone]
 	if !ok {
 		deflate.Print()
@@ -132,11 +133,10 @@ func (deflate *DeflateTree)EnCodeElement(ele uint16,
 //return 第1个返回实际距离 第2个参数表示返回字节偏移  第二个参数表示bits偏移
 //return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7) | bool表示是否是长度 true 是
 func (deflate *DeflateTree)DecodeEle(bytes []byte,
-									offset uint32,
-									common DeflateCommon) (uint16, uint32, uint32, bool) {
+									offset uint32) (uint16, uint32, uint32, bool) {
 	code, off, bits := deflate.node.decodeCodeDeflate(bytes, offset)
 	//bitsLen, lower := getDataByZone(code, deflate.extraCode)
-	bitsLen, lower, flag := common.GetSourceCode(code, deflate.extraCode)
+	bitsLen, lower, flag := deflate.condition.GetSourceCode(code)
 
 	dis, o, bits := utils.ReadBitsLen(bytes[off:], bits, bitsLen)
 	//fmt.Printf("dis %v  lower %v\n", dis, lower)
@@ -145,8 +145,8 @@ func (deflate *DeflateTree)DecodeEle(bytes []byte,
 }
 
 //根据位数来重新获得码表映射
-func (deflate *DeflateTree)UnSerializeBitsStream(bits  []byte, common DeflateCommon) {
-	if len(bits) != common.GetBitsLen(deflate.extraCode) {
+func (deflate *DeflateTree)UnSerializeBitsStream(bits  []byte) {
+	if len(bits) != deflate.condition.GetBitsLen() {
 		panic(fmt.Sprintf("BuildTreeByBits error length %v", len(bits)))
 	}
 	deflate.dishuffMap = buildCodeMapByBits(bits)

@@ -182,3 +182,20 @@ func TestDeflateTree3(t *testing.T)  {
 		}
 	}
 }
+
+func TestDistanceGetMaxLen(t *testing.T) {
+	literalAlgorithm := &HuffmanAlg{}
+	literalAlgorithm.InitLiteral()
+	rand.Seed(time.Now().Unix())
+
+	for i := 0; i <= 285; i++ {
+		//randomTimes := rand.Uint32() % 200
+		//for j := uint32(0); j < randomTimes; j++ {
+		for j := 0; j < i * 10000; j++ {
+			literalAlgorithm.AddElement(uint16(i), false)
+		}
+	}
+	literalAlgorithm.AddElement(uint16(9), false)
+	literalAlgorithm.BuildHuffmanMap()
+	literalAlgorithm.SerializeBitsStream()
+}

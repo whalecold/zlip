@@ -2,6 +2,8 @@ package utils
 
 import (
 	"testing"
+	"fmt"
+	"unsafe"
 )
 
 func TestReadBitLow(t *testing.T) {
@@ -24,6 +26,8 @@ func TestReadBitLow(t *testing.T) {
 }
 
 func TestReadBitsHigh(t *testing.T) {
+	var i int
+	fmt.Printf("sizeof %v\n", unsafe.Sizeof(i))
 	//0xB6
 	//1011 0110
 	if ReadBitsHigh(0xB6, 0) != 1 ||

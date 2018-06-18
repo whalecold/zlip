@@ -3,8 +3,8 @@ package lz77
 import (
 	//"fmt"
 	"algorithm/huffman"
-	"utils"
 	"encoding/binary"
+	"fmt"
 )
 
 
@@ -63,169 +63,99 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 		panic("func cmp bytes need large than 3")
 	}
 
-	//lliMap := make(map[uint16]int)
-	//disMap := make(map[byte]int)
+	//进行第一步压缩 得到两个码表序列和压缩后的码流
+	cl1Bits, cl2Bits, huffmanCode := compressCl(bytes, size)
+	//fmt.Printf("cl1Bits %v  cl2Bits %v\n", cl1Bits, cl2Bits)
+	//游程编码压缩
+	sq1 := RLC(cl1Bits)
+	sq2 := RLC(cl2Bits)
 
-	result := make([]uint16, 0, 1024)
+	//fmt.Printf("sq1 %v  sq2 %v\n", sq1, sq2)
+
+	sq1Bits, sq2Bits, huffman3 := compressCCl(sq1, sq2)
+
+	//fmt.Printf("sq1Bits %v  sq2Bits %v huffman3 %v\n", sq1Bits, sq2Bits, huffman3)
+
+	/* 压缩格式 单位 byte
+	| headInfoLen (1)| infos(len1) |  huffman3Len(2) | sq1BitsLen(2) |
+	|sq2BitsLen(2) | huffman3 | sq1Bits | sq2Bits | huffmanCode...|
+	*/
+	headInfoLen := make([]byte, 2)
+	huffman3Len := make([]byte, 2)
+	sq1BitsLen := make([]byte, 2)
+	sq2BitsLen := make([]byte, 2)
+
+	binary.BigEndian.PutUint16(headInfoLen, uint16(len(LZ77_HeadInfo)))
+	binary.BigEndian.PutUint16(huffman3Len, uint16(len(huffman3)))
+	binary.BigEndian.PutUint16(sq1BitsLen, uint16(len(sq1Bits)))
+	binary.BigEndian.PutUint16(sq2BitsLen, uint16(len(sq2Bits)))
+
+	lastResult := make([]byte, 0, 8 +
+								uint32(len(LZ77_HeadInfo)) +
+								uint32(len(huffman3)) +
+								uint32(len(sq1Bits)) +
+								uint32(len(sq2Bits)))
+
+	lastResult = append(lastResult, headInfoLen...)
+	lastResult = append(lastResult, []byte(LZ77_HeadInfo)...)
+	lastResult = append(lastResult, huffman3Len...)
+	lastResult = append(lastResult, sq1BitsLen...)
+	lastResult = append(lastResult, sq2BitsLen...)
 
 
-	prevIndex := make([]uint64, LZ77_CmpPrevSize)
-	headIndex := make([]uint64, LZ77_CmpHeadSize)
+	lastResult = append(lastResult, huffman3...)
+	lastResult = append(lastResult, sq1Bits...)
+	lastResult = append(lastResult, sq2Bits...)
 
-	disAlgorithm := &huffman.HuffmanAlg{}
-	disAlgorithm.InitDis()
-	literalAlgorithm := &huffman.HuffmanAlg{}
-	literalAlgorithm.InitLiteral()
-
-
-	for i := 0; i < LZ77_MinCmpSize; i++ {
-		result = append(result, uint16(bytes[i]))
-		literalAlgorithm.AddElement(uint16(bytes[i]),false)
-	}
-	//bytes = append(bytes, LZ77_EndFlag)
-
-	literalAlgorithm.AddElement(LZ77_EndFlag, false)
-	//小于三个字节
-	var index uint64
-	for index = LZ77_MinCmpSize; index + LZ77_MinCmpSize <= size;  {
-
-		//每次移动窗口都要更新值
-		updateHashBytes(bytes, index, prevIndex, headIndex)
-
-		hash := genHashNumber(bytes[index:index + LZ77_MinCmpSize])
-		cmpIndex := headIndex[hash]
-		if cmpIndex == 0 { //没有匹配到
-			result = append(result, uint16(bytes[index]))
-			literalAlgorithm.AddElement(uint16(bytes[index]), false)
-			index++
-		} else {	//匹配到了
-
-			var maxCmpStart uint64
-			var maxCmpLength uint64
-			var maxCmpNumber uint64
-			//遍历hash值一致的链表
-			for {
-
-				length := checkLargestCmpBytes(bytes, index, cmpIndex, size)
-
-				if maxCmpLength < length && index-cmpIndex < LZ77_MaxWindowsSize{
-					maxCmpLength = length
-					maxCmpStart = cmpIndex
-				}
-
-				cmpIndex = prevIndex[cmpIndex & LZ77_WindowsMask]
-				if cmpIndex == 0 {
-					break
-				}
-				//fmt.Printf("luup %v %v\n", cmpIndex, prevIndex[cmpIndex & LZ77_WindowsMask])
-				maxCmpNumber++
-				//限制匹配次数 不做判断会造成死循环
-				if maxCmpNumber >= LZ77_MaxCmpNum {
-					break
-				}
-			}
-
-			//还是没有匹配到 或者 匹配到的是hash冲突的字段
-			if maxCmpLength < LZ77_MinCmpSize {
-				result = append(result, uint16(bytes[index]))
-				literalAlgorithm.AddElement(uint16(bytes[index]), false)
-				index++
-			} else {
-				tempLength := uint16(maxCmpLength)
-				literalAlgorithm.AddElement(tempLength, true)
-				//fmt.Printf("pre length %v------\n", tempLength)
-				utils.WriteBitsHigh16(&tempLength, 0, 1)
-				//fmt.Printf("----------------------pre length %v\n", uint16(index-maxCmpStart))
-				result = append(result, tempLength)
-				result = append(result, uint16(index-maxCmpStart))
-				disAlgorithm.AddElement(uint16(index-maxCmpStart), false)
-				//str := fmt.Sprintf("(%v,%v)", maxCmpLength, index-maxCmpStart)
-				temp := index + 1
-				index += maxCmpLength
-
-				for ; temp < index; temp++ {
-					updateHashBytes(bytes, temp, prevIndex, headIndex)
-				}
-				//result = append(result, []byte(str)...)
-			}
-		}
-	}
-
-	//如果还有剩余 直接打印出来 不匹配了
-	for ; index < size; index++ {
-		result = append(result, uint16(bytes[index]))
-		literalAlgorithm.AddElement(uint16(bytes[index]), false)
-	}
-
-	literalAlgorithm.BuildHuffmanMap()
-
-	disAlgorithm.BuildHuffmanMap()
-	//fmt.Printf("prev %v\n", prevIndex)
-	//fmt.Printf("head %v\n", headIndex)
-	huffmanCode := make([]byte, 1, 1024)
-	//var offset uint64
-	var bits uint32
-	var indexCode uint64
-	var bit uint32
-
-	//for _, value := range result {
-	//}
-	result = append(result, LZ77_EndFlag)
-	for i := 0; i < len(result); i++{
-		//表示长度
-		if utils.ReadBitsHigh16(result[i], 0) == 1 {
-			utils.WriteBitsHigh16(&result[i], 0, 0)
-			//fmt.Printf("new ----- %v\n", temp)
-			bit = literalAlgorithm.EnCodeElement(result[i], &huffmanCode, bits, &indexCode,true)
-			bits = bit
-
-			i++
-			bit = disAlgorithm.EnCodeElement(result[i], &huffmanCode, bits, &indexCode, false)
-			bits = bit
-		} else {
-			bit = literalAlgorithm.EnCodeElement(result[i], &huffmanCode, bits, &indexCode, false)
-			bits = bit
-		}
-	}
-	literalBits, literalBitsLen := literalAlgorithm.SerializeBitsStream()
-	disBits, disBitsLen := disAlgorithm.SerializeBitsStream()
-	literalLen := make([]byte, 4)
-	distanceLen := make([]byte, 4)
-	binary.BigEndian.PutUint32(literalLen, literalBitsLen)
-	binary.BigEndian.PutUint32(distanceLen, disBitsLen)
-	lastResult := make([]byte, 0, 8 + disBitsLen +
-		literalBitsLen + uint32(len(huffmanCode)))
-	lastResult = append(lastResult, literalLen...)
-	lastResult = append(lastResult, distanceLen...)
-	lastResult = append(lastResult, literalBits...)
-	lastResult = append(lastResult, disBits...)
 	lastResult = append(lastResult, huffmanCode...)
 	return lastResult
 }
 
+/* 压缩格式 单位 byte
+| headInfoLen (2)| infos(len1) |  huffman3Len(2) | sq1BitsLen(2) |
+|sq2BitsLen(2) | huffman3 | sq1Bits | sq2Bits | huffmanCode...|
+*/
 func UnLz77Compress(bytes []byte) []byte {
 	if len(bytes) < 8 {
 		panic("UnLz77Compress error param len ")
 	}
 
 	var offset uint64
-	literalBitsLen := binary.BigEndian.Uint32(bytes[:4])
-	distanceBitsLen := binary.BigEndian.Uint32(bytes[4:8])
+	headLen := binary.BigEndian.Uint16(bytes[:2])
+	offset += 2
+	headInfo := bytes[offset:offset+uint64(headLen)]
+	fmt.Printf("head info %v\n", string(headInfo))
+	offset += uint64(headLen)
+
+	huffman3Len := binary.BigEndian.Uint16(bytes[offset:offset+2])
+	offset += 2
+	sq1BitsLen := binary.BigEndian.Uint16(bytes[offset:offset+2])
+	offset += 2
+	sq2BitsLen := binary.BigEndian.Uint16(bytes[offset:offset+2])
+	offset += 2
+	huffmanCode := bytes[offset:offset+uint64(huffman3Len)]
+	offset += uint64(huffman3Len)
+	sq1Bits := bytes[offset:offset+uint64(sq1BitsLen)]
+	offset += uint64(sq1BitsLen)
+	sq2Bits := bytes[offset:offset+uint64(sq2BitsLen)]
+	offset += uint64(sq2BitsLen)
+
+	sq1Serial, sq2Serial := unCompressSQ(huffmanCode, sq1Bits, sq2Bits)
+
+	sq1Serial = UnRLC(sq1Serial)
+	sq2Serial = UnRLC(sq2Serial)
 
 
-	disAlgorithm := &huffman.HuffmanAlg{}
-	disAlgorithm.InitDis()
-	literalAlgorithm := &huffman.HuffmanAlg{}
-	literalAlgorithm.InitLiteral()
-	offset += 8
+	cl1 := &huffman.HuffmanAlg{}
+	cl1.InitDis()
+	cl2 := &huffman.HuffmanAlg{}
+	cl2.InitLiteral()
 
-	literalAlgorithm.UnSerializeAndBuild(bytes[offset:offset+uint64(literalBitsLen)])
+	cl2.UnSerializeAndBuild(sq2Serial)
 
-	offset += uint64(literalBitsLen)
-	disAlgorithm.UnSerializeAndBuild(bytes[offset:offset+uint64(distanceBitsLen)])
+	cl1.UnSerializeAndBuild(sq1Serial)
 	//fmt.Printf("read %v\n", bytes[offset:offset+uint64(distanceBitsLen)])
 	//disDeflateTree.Print()
-	offset += uint64(distanceBitsLen)
 
 	lastResult := make([]byte, 0, 1024)
 
@@ -234,13 +164,13 @@ func UnLz77Compress(bytes []byte) []byte {
 	var resubyteoffset uint32
 	var bitoffset uint32
 	for {
-		getData, r, b, l:= literalAlgorithm.DecodeEle(buffer[resubyteoffset:], bitoffset)
+		getData, r, b, l:= cl2.DecodeEle(buffer[resubyteoffset:], bitoffset)
 		resubyteoffset += r
 		bitoffset = b
 		//fmt.Printf("dara %v, %v\n", getData, l)
 		if l == true {
 			length := uint64(getData)
-			getData, r, b, _ = disAlgorithm.DecodeEle(buffer[resubyteoffset:], bitoffset)
+			getData, r, b, _ = cl1.DecodeEle(buffer[resubyteoffset:], bitoffset)
 			resubyteoffset += r
 			bitoffset = b
 			//fmt.Printf("dara %v, %v\n", getData, l)
@@ -248,7 +178,7 @@ func UnLz77Compress(bytes []byte) []byte {
 			for i := uint64(0); i < length; i++ {
 				lastResult = append(lastResult, lastResult[nowLen-uint64(getData)+i])
 			}
-		} else if getData == 256 {
+		} else if getData == huffman.HUFFMAN_EndFlag {
 			//fmt.Printf("end buffer \n")
 			break
 		} else {
