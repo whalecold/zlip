@@ -72,26 +72,19 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 	prevIndex := make([]uint64, LZ77_CmpPrevSize)
 	headIndex := make([]uint64, LZ77_CmpHeadSize)
 
-	disDeflateTree := &huffman.DeflateTree{}
-	disDeflateTree.Init(huffman.DistanceZone)
-	//disDeflateTree.BuildTree()
-	//disDeflateTree.BuildMap()
-	literalDeflateTree := &huffman.DeflateTree{}
-	literalDeflateTree.Init(huffman.LengthZone)
-	//literalDeflateTree.BuildTree()
-	//literalDeflateTree.BuildMap()
-	distance := &huffman.Distance{}
-	literal := &huffman.Literal{}
+	disAlgorithm := &huffman.HuffmanAlg{}
+	disAlgorithm.InitDis()
+	literalAlgorithm := &huffman.HuffmanAlg{}
+	literalAlgorithm.InitLiteral()
+
 
 	for i := 0; i < LZ77_MinCmpSize; i++ {
 		result = append(result, uint16(bytes[i]))
-		literalDeflateTree.AddElement(uint16(bytes[i]), literal,
-			false)
+		literalAlgorithm.AddElement(uint16(bytes[i]),false)
 	}
 	//bytes = append(bytes, LZ77_EndFlag)
 
-	literalDeflateTree.AddElement(LZ77_EndFlag, literal,
-		false)
+	literalAlgorithm.AddElement(LZ77_EndFlag, false)
 	//小于三个字节
 	var index uint64
 	for index = LZ77_MinCmpSize; index + LZ77_MinCmpSize <= size;  {
@@ -103,8 +96,7 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 		cmpIndex := headIndex[hash]
 		if cmpIndex == 0 { //没有匹配到
 			result = append(result, uint16(bytes[index]))
-			literalDeflateTree.AddElement(uint16(bytes[index]), literal,
-				false)
+			literalAlgorithm.AddElement(uint16(bytes[index]), false)
 			index++
 		} else {	//匹配到了
 
@@ -136,20 +128,17 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 			//还是没有匹配到 或者 匹配到的是hash冲突的字段
 			if maxCmpLength < LZ77_MinCmpSize {
 				result = append(result, uint16(bytes[index]))
-				literalDeflateTree.AddElement(uint16(bytes[index]), literal,
-					false)
+				literalAlgorithm.AddElement(uint16(bytes[index]), false)
 				index++
 			} else {
 				tempLength := uint16(maxCmpLength)
-				literalDeflateTree.AddElement(tempLength, literal,
-					true)
+				literalAlgorithm.AddElement(tempLength, true)
 				//fmt.Printf("pre length %v------\n", tempLength)
 				utils.WriteBitsHigh16(&tempLength, 0, 1)
 				//fmt.Printf("----------------------pre length %v\n", uint16(index-maxCmpStart))
 				result = append(result, tempLength)
 				result = append(result, uint16(index-maxCmpStart))
-				disDeflateTree.AddElement(uint16(index-maxCmpStart), distance,
-					false)
+				disAlgorithm.AddElement(uint16(index-maxCmpStart), false)
 				//str := fmt.Sprintf("(%v,%v)", maxCmpLength, index-maxCmpStart)
 				temp := index + 1
 				index += maxCmpLength
@@ -165,15 +154,12 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 	//如果还有剩余 直接打印出来 不匹配了
 	for ; index < size; index++ {
 		result = append(result, uint16(bytes[index]))
-		literalDeflateTree.AddElement(uint16(bytes[index]), literal,
-			false)
+		literalAlgorithm.AddElement(uint16(bytes[index]), false)
 	}
 
-	literalDeflateTree.BuildTree()
-	literalDeflateTree.BuildMap()
+	literalAlgorithm.BuildHuffmanMap()
 
-	disDeflateTree.BuildTree()
-	disDeflateTree.BuildMap()
+	disAlgorithm.BuildHuffmanMap()
 	//fmt.Printf("prev %v\n", prevIndex)
 	//fmt.Printf("head %v\n", headIndex)
 	huffmanCode := make([]byte, 1, 1024)
@@ -190,36 +176,30 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 		if utils.ReadBitsHigh16(result[i], 0) == 1 {
 			utils.WriteBitsHigh16(&result[i], 0, 0)
 			//fmt.Printf("new ----- %v\n", temp)
-			bit = literalDeflateTree.EnCodeElement(result[i], &huffmanCode, bits, &indexCode,
-				literal, true)
+			bit = literalAlgorithm.EnCodeElement(result[i], &huffmanCode, bits, &indexCode,true)
 			bits = bit
 
 			i++
-			bit = disDeflateTree.EnCodeElement(result[i], &huffmanCode, bits, &indexCode,
-				distance, false)
+			bit = disAlgorithm.EnCodeElement(result[i], &huffmanCode, bits, &indexCode, false)
 			bits = bit
 		} else {
-			bit = literalDeflateTree.EnCodeElement(result[i], &huffmanCode, bits, &indexCode,
-				literal, false)
+			bit = literalAlgorithm.EnCodeElement(result[i], &huffmanCode, bits, &indexCode, false)
 			bits = bit
 		}
 	}
-	literalDeflateTree.SerializeBitsStream(literal)
-	disDeflateTree.SerializeBitsStream(distance)
+	literalBits, literalBitsLen := literalAlgorithm.SerializeBitsStream()
+	disBits, disBitsLen := disAlgorithm.SerializeBitsStream()
 	literalLen := make([]byte, 4)
 	distanceLen := make([]byte, 4)
-	binary.BigEndian.PutUint32(literalLen, literalDeflateTree.BitesLen())
-	binary.BigEndian.PutUint32(distanceLen, disDeflateTree.BitesLen())
-	lastResult := make([]byte, 0, 8 + literalDeflateTree.BitesLen() +
-		disDeflateTree.BitesLen() + uint32(len(huffmanCode)))
+	binary.BigEndian.PutUint32(literalLen, literalBitsLen)
+	binary.BigEndian.PutUint32(distanceLen, disBitsLen)
+	lastResult := make([]byte, 0, 8 + disBitsLen +
+		literalBitsLen + uint32(len(huffmanCode)))
 	lastResult = append(lastResult, literalLen...)
 	lastResult = append(lastResult, distanceLen...)
-	lastResult = append(lastResult, literalDeflateTree.GetBits()...)
-	lastResult = append(lastResult, disDeflateTree.GetBits()...)
+	lastResult = append(lastResult, literalBits...)
+	lastResult = append(lastResult, disBits...)
 	lastResult = append(lastResult, huffmanCode...)
-	//fmt.Printf("lastResult... len %b\n", huffmanCode)
-	//fmt.Printf("lastResult... len %v\n", literalDeflateTree.GetBits())
-	//fmt.Printf("lastResult... len %v\n", disDeflateTree.GetBits())
 	return lastResult
 }
 
@@ -232,23 +212,18 @@ func UnLz77Compress(bytes []byte) []byte {
 	literalBitsLen := binary.BigEndian.Uint32(bytes[:4])
 	distanceBitsLen := binary.BigEndian.Uint32(bytes[4:8])
 
-	disDeflateTree := &huffman.DeflateTree{}
-	disDeflateTree.Init(huffman.DistanceZone)
-	literalDeflateTree := &huffman.DeflateTree{}
-	literalDeflateTree.Init(huffman.LengthZone)
-	distance := &huffman.Distance{}
-	literal := &huffman.Literal{}
+
+	disAlgorithm := &huffman.HuffmanAlg{}
+	disAlgorithm.InitDis()
+	literalAlgorithm := &huffman.HuffmanAlg{}
+	literalAlgorithm.InitLiteral()
 	offset += 8
 
-	literalDeflateTree.UnSerializeBitsStream(bytes[offset:offset+uint64(literalBitsLen)], literal)
+	literalAlgorithm.UnSerializeAndBuild(bytes[offset:offset+uint64(literalBitsLen)])
 
-	//fmt.Printf("read %v\n", bytes[offset:offset+uint64(literalBitsLen)])
-	literalDeflateTree.BuildTreeByMap()
-	//literalDeflateTree.Print()
 	offset += uint64(literalBitsLen)
-	disDeflateTree.UnSerializeBitsStream(bytes[offset:offset+uint64(distanceBitsLen)], distance)
+	disAlgorithm.UnSerializeAndBuild(bytes[offset:offset+uint64(distanceBitsLen)])
 	//fmt.Printf("read %v\n", bytes[offset:offset+uint64(distanceBitsLen)])
-	disDeflateTree.BuildTreeByMap()
 	//disDeflateTree.Print()
 	offset += uint64(distanceBitsLen)
 
@@ -259,13 +234,13 @@ func UnLz77Compress(bytes []byte) []byte {
 	var resubyteoffset uint32
 	var bitoffset uint32
 	for {
-		getData, r, b, l:= literalDeflateTree.DecodeEle(buffer[resubyteoffset:], bitoffset, literal)
+		getData, r, b, l:= literalAlgorithm.DecodeEle(buffer[resubyteoffset:], bitoffset)
 		resubyteoffset += r
 		bitoffset = b
 		//fmt.Printf("dara %v, %v\n", getData, l)
 		if l == true {
 			length := uint64(getData)
-			getData, r, b, _ = disDeflateTree.DecodeEle(buffer[resubyteoffset:], bitoffset, distance)
+			getData, r, b, _ = disAlgorithm.DecodeEle(buffer[resubyteoffset:], bitoffset)
 			resubyteoffset += r
 			bitoffset = b
 			//fmt.Printf("dara %v, %v\n", getData, l)
