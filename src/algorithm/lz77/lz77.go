@@ -79,12 +79,12 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 	| headInfoLen (1)| infos(len1) |  huffman3Len(2) | sq1BitsLen(2) |
 	|sq2BitsLen(2) | huffman3 | sq1Bits | sq2Bits | huffmanCode...|
 	*/
-	headInfoLen := make([]byte, 2)
+	//headInfoLen := make([]byte, 2)
 	huffman3Len := make([]byte, 2)
 	sq1BitsLen := make([]byte, 2)
 	sq2BitsLen := make([]byte, 2)
 
-	binary.BigEndian.PutUint16(headInfoLen, uint16(len(LZ77_HeadInfo)))
+	//binary.BigEndian.PutUint16(headInfoLen, uint16(len(LZ77_HeadInfo)))
 	binary.BigEndian.PutUint16(huffman3Len, uint16(len(huffman3)))
 	binary.BigEndian.PutUint16(sq1BitsLen, uint16(len(sq1Bits)))
 	binary.BigEndian.PutUint16(sq2BitsLen, uint16(len(sq2Bits)))
@@ -95,8 +95,8 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 								uint32(len(sq1Bits)) +
 								uint32(len(sq2Bits)))
 
-	lastResult = append(lastResult, headInfoLen...)
-	lastResult = append(lastResult, []byte(LZ77_HeadInfo)...)
+	//lastResult = append(lastResult, headInfoLen...)
+	//lastResult = append(lastResult, []byte(LZ77_HeadInfo)...)
 	lastResult = append(lastResult, huffman3Len...)
 	lastResult = append(lastResult, sq1BitsLen...)
 	lastResult = append(lastResult, sq2BitsLen...)
@@ -120,11 +120,11 @@ func UnLz77Compress(bytes []byte) []byte {
 	}
 
 	var offset uint64
-	headLen := binary.BigEndian.Uint16(bytes[:2])
-	offset += 2
+	//headLen := binary.BigEndian.Uint16(bytes[:2])
+	//offset += 2
 	//headInfo := bytes[offset:offset+uint64(headLen)]
 	//fmt.Printf("head info %v\n", string(headInfo))
-	offset += uint64(headLen)
+	//offset += uint64(headLen)
 
 	huffman3Len := binary.BigEndian.Uint16(bytes[offset:offset+2])
 	offset += 2

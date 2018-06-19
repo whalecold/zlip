@@ -76,7 +76,7 @@ func (deflate *DeflateTree)SerializeBitsStream() {
 	deflate.bits = make([]byte, deflate.condition.GetBitsLen())
 	for k, v := range deflate.dishuffMap {
 		if int(k) >= deflate.condition.GetBitsLen() {
-			panic("BuildBitsStream error should be less than 30")
+			panic(fmt.Sprintf("BuildBitsStream error should be less than %v", deflate.condition.GetBitsLen()))
 		}
 		//fmt.Printf("+++++++ %v  %v", k, v)
 		deflate.bits[k] = byte(len(v))
@@ -147,7 +147,7 @@ func (deflate *DeflateTree)DecodeEle(bytes []byte,
 //根据位数来重新获得码表映射
 func (deflate *DeflateTree)UnSerializeBitsStream(bits  []byte) {
 	if len(bits) != deflate.condition.GetBitsLen() {
-		panic(fmt.Sprintf("BuildTreeByBits error length %v", len(bits)))
+		panic(fmt.Sprintf("BuildTreeByBits error length %v shoud be %v", len(bits), deflate.condition.GetBitsLen()))
 	}
 	deflate.dishuffMap = buildCodeMapByBits(bits)
 }

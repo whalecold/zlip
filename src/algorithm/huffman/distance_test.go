@@ -12,27 +12,26 @@ func TestDeflateTree2(t *testing.T) {
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	dis := []uint16{67, 2231, 222, 1212, 991, 4, 4, 4, 4, 5, 6, 5, 35, 99, 99, 99, 33, 31, 90}
-	tree := &DeflateTree{}
-	tree.Init(DistanceZone)
-	disTree := &Distance{}
+	tree := &DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	tree.Init()
 	for _, value := range dis {
-		tree.AddElement(value, disTree, false)
+		tree.AddElement(value, false)
 	}
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream(disTree)
+	tree.SerializeBitsStream()
 	//tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
-	newTree := &DeflateTree{}
-	newTree.Init(DistanceZone)
-	newTree.UnSerializeBitsStream(tree.bits, disTree)
+	newTree := &DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	newTree.Init()
+	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
-	newTree.SerializeBitsStream(disTree)
+	newTree.SerializeBitsStream()
 
-	newTree2 := DeflateTree{}
-	newTree2.Init(DistanceZone)
-	newTree2.UnSerializeBitsStream(tree.bits, disTree)
+	newTree2 := DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	newTree2.Init()
+	newTree2.UnSerializeBitsStream(tree.bits)
 	//newTree2.Print()
 	//newTree.Print()
 
@@ -60,9 +59,9 @@ func TestDeflateTreeRandom(t *testing.T) {
 	for i := 0; i < length; i++ {
 		dis = append(dis, uint16(rand.Uint32() % 32768))
 	}
-	tree := &DeflateTree{}
-	tree.Init(DistanceZone)
-	disTree := &Distance{}
+	tree := &DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	tree.Init()
+
 	for _, value := range dis {
 		tree.AddElement(value, false)
 	}
@@ -71,19 +70,19 @@ func TestDeflateTreeRandom(t *testing.T) {
 
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream(disTree)
+	tree.SerializeBitsStream()
 	//tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
-	newTree := &DeflateTree{}
-	newTree.Init(DistanceZone)
+	newTree := &DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	newTree.Init()
 	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
 	newTree.SerializeBitsStream()
 	//newTree.Print()
 
-	newTree2 := DeflateTree{}
-	newTree2.Init(DistanceZone)
+	newTree2 := DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	newTree2.Init()
 	newTree2.UnSerializeBitsStream(tree.bits)
 	//newTree2.Print()
 	if false == newTree.Equal(tree) {
@@ -118,25 +117,24 @@ func TestDeflateTree3(t *testing.T)  {
 	for i := 0; i < length; i++ {
 		dis = append(dis, uint16(rand.Uint32() % 32768))
 	}
-	tree := &DeflateTree{}
-	tree.Init(DistanceZone)
-	disTree := &Distance{}
+	tree := &DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	tree.Init()
 	for _, value := range dis {
-		tree.AddElement(value, disTree, false)
+		tree.AddElement(value, false)
 	}
-	tree.AddElement(3, disTree, false)
-	tree.AddElement(2, disTree, false)
-	tree.AddElement(4, disTree, false)
-	tree.AddElement(5, disTree, false)
+	tree.AddElement(3, false)
+	tree.AddElement(2, false)
+	tree.AddElement(4, false)
+	tree.AddElement(5, false)
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream(disTree)
+	tree.SerializeBitsStream()
 
-	newTree := &DeflateTree{}
-	newTree.Init(DistanceZone)
-	newTree.UnSerializeBitsStream(tree.bits, disTree)
+	newTree := &DeflateTree{condition:&Distance{extraCode:DistanceZone}}
+	newTree.Init()
+	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
-	newTree.SerializeBitsStream(disTree)
+	newTree.SerializeBitsStream()
 
 	code := make([]byte, 1, 32)
 	testDis := make([]uint16, 0, 12)
@@ -158,8 +156,7 @@ func TestDeflateTree3(t *testing.T)  {
 	var indexCode uint64
 	var bits uint32
 	for _, value := range testDis {
-		bit := tree.EnCodeElement(value, &code, bits, &indexCode,
-					disTree, false)
+		bit := tree.EnCodeElement(value, &code, bits, &indexCode, false)
 		bits = bit
 	}
 
@@ -168,7 +165,7 @@ func TestDeflateTree3(t *testing.T)  {
 	var resubyteoffset uint32
 	var bitoffset uint32
 	for i := 0; i < times; i++ {
-		getData, r, b, _:= newTree.DecodeEle(code[resubyteoffset:], bitoffset, disTree)
+		getData, r, b, _:= newTree.DecodeEle(code[resubyteoffset:], bitoffset)
 		resubyteoffset += r
 		bitoffset = b
 		result = append(result, getData)

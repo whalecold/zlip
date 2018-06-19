@@ -54,3 +54,7 @@ func (h *HuffmanAlg)DecodeEle(bytes []byte,
 								offset uint32)(uint16, uint32, uint32, bool) {
 	return h.tree.DecodeEle(bytes, offset)
 }
+
+func (h *HuffmanAlg)GetBits() []byte {
+	return h.tree.GetBits()
+}

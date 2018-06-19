@@ -12,7 +12,7 @@ const (
 	LZ77_EndFlag 		= 256 					//結束
 	LZ77_HeadInfo 		= "zls1129@gmail.com version 1.0.1"
 
-	LZ77_ChunkSize 		= 1024 * 1024 * 50
+	LZ77_ChunkSize 		= 1024 * 1024 * 100
 )
 
 const (

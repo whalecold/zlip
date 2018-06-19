@@ -14,32 +14,30 @@ func TestLiteralTree1(t *testing.T) {
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	dis := []uint16{'h', 'e', 'l', 'l'}
-	tree := &DeflateTree{}
-	tree.Init(LengthZone)
-	literalTree := &Literal{}
+	tree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	tree.Init()
 	for _, value := range dis {
-		tree.AddElement(value, literalTree, false)
+		tree.AddElement(value, false)
 	}
-	tree.AddElement(3, literalTree, true)
-	tree.AddElement(100, literalTree, true)
+	tree.AddElement(3, true)
+	tree.AddElement(100, true)
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream(literalTree)
+	tree.SerializeBitsStream()
 	tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
-	newTree := &DeflateTree{}
-	newTree.Init(LengthZone)
+	newTree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	newTree.Init()
 
-	newTree.UnSerializeBitsStream(tree.bits, literalTree)
+	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
 
 	code := make([]byte, 1, 32)
 	var offset uint64
-	tree.EnCodeElement(100, &code, 0, &offset,
-		literalTree, true)
+	tree.EnCodeElement(100, &code, 0, &offset, true)
 
-	getData, _, _, _ := newTree.DecodeEle(code, 0, literalTree)
+	getData, _, _, _ := newTree.DecodeEle(code, 0)
 	fmt.Printf("get c %v\n", getData)
 }
 
@@ -50,22 +48,22 @@ func TestLiteralTree2(t *testing.T) {
 	{'e', false},
 	{126, true}, {11, true}, {'w', false},
 	{256, false}}
-	tree := &DeflateTree{}
-	tree.Init(LengthZone)
-	literalTree := &Literal{}
+	tree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	tree.Init()
+
 	for _, value := range literalSlice {
-		tree.AddElement(value.Data, literalTree, value.Length)
+		tree.AddElement(value.Data, value.Length)
 	}
 	tree.BuildTree()
 	tree.BuildMap()
-	tree.SerializeBitsStream(literalTree)
+	tree.SerializeBitsStream()
 	tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
-	newTree := &DeflateTree{}
-	newTree.Init(LengthZone)
+	newTree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	newTree.Init()
 
-	newTree.UnSerializeBitsStream(tree.bits, literalTree)
+	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
 
 	code := make([]byte, 1, 32)
@@ -73,15 +71,14 @@ func TestLiteralTree2(t *testing.T) {
 	var bits uint32
 	var indexCode uint64
 	for _, value := range literalSlice {
-		bit := tree.EnCodeElement(value.Data, &code, bits, &indexCode,
-			literalTree, value.Length)
+		bit := tree.EnCodeElement(value.Data, &code, bits, &indexCode, value.Length)
 		bits = bit
 	}
 
 	var resubyteoffset uint32
 	var bitoffset uint32
 	for {
-		getData, r, b, l:= newTree.DecodeEle(code[resubyteoffset:], bitoffset, literalTree)
+		getData, r, b, l:= newTree.DecodeEle(code[resubyteoffset:], bitoffset)
 		resubyteoffset += r
 		bitoffset = b
 		if l == true {
