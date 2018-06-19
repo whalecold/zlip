@@ -5,6 +5,11 @@
 > - [详细图解哈夫曼Huffman编码树](https://blog.csdn.net/FX677588/article/details/70767446)
 > - [几种压缩算法实现原理详解](https://blog.csdn.net/ghevinn/article/details/45747465)
 
+### 参数
+> - 使用参数 -d(true/false) true 表示解压 false 表示压缩  
+> - -source=file 被压缩或者是被解压的文件名
+> - -dest=file 压缩后或者是解压后的文件名
+
 ### 2018-06-11  demo版
 
 > - 把huffman算法基本完成了，但是压缩了不是很高，简单看下问题，是因为序列化huffman树的占用了很大的空间 这里有很大的优化空间（毕竟这只是算法的一部分）
