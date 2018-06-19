@@ -64,19 +64,19 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 
 	//进行第一步压缩 得到两个码表序列和压缩后的码流
 	cl1Bits, cl2Bits, huffmanCode := compressCl(bytes, size)
-	//fmt.Printf("cl1Bits %v  cl2Bits %v\n", cl1Bits, cl2Bits)
+	//fmt.Printf("cl1Bits %v  cl2Bits %v\n", len(cl1Bits), len(cl2Bits))
 	//游程编码压缩
 	sq1 := RLC(cl1Bits)
 	sq2 := RLC(cl2Bits)
 
-	//fmt.Printf("sq1 %v  sq2 %v\n", sq1, sq2)
+	//fmt.Printf("sq1 %v  sq2 %v\n", len(sq1), len(sq2))
 
 	sq1Bits, sq2Bits, huffman3 := compressCCl(sq1, sq2)
 
-	//fmt.Printf("sq1Bits %v  sq2Bits %v huffman3 %v\n", sq1Bits, sq2Bits, huffman3)
+	//fmt.Printf("sq1Bits %v  sq2Bits %v huffman3 %v\n", len(sq1Bits), len(sq2Bits), len(huffman3))
 
 	/* 压缩格式 单位 byte
-	| headInfoLen (1)| infos(len1) |  huffman3Len(2) | sq1BitsLen(2) |
+	|  huffman3Len(2) | sq1BitsLen(2) |
 	|sq2BitsLen(2) | huffman3 | sq1Bits | sq2Bits | huffmanCode...|
 	*/
 	//headInfoLen := make([]byte, 2)
@@ -111,7 +111,7 @@ func Lz77Compress(bytes []byte, size uint64) []byte {
 }
 
 /* 压缩格式 单位 byte
-| headInfoLen (2)| infos(len1) |  huffman3Len(2) | sq1BitsLen(2) |
+|huffman3Len(2) | sq1BitsLen(2) |
 |sq2BitsLen(2) | huffman3 | sq1Bits | sq2Bits | huffmanCode...|
 */
 func UnLz77Compress(bytes []byte) []byte {
@@ -125,6 +125,7 @@ func UnLz77Compress(bytes []byte) []byte {
 	//headInfo := bytes[offset:offset+uint64(headLen)]
 	//fmt.Printf("head info %v\n", string(headInfo))
 	//offset += uint64(headLen)
+	//fmt.Printf("UnLz77Compress  %v \n", len(bytes))
 
 	huffman3Len := binary.BigEndian.Uint16(bytes[offset:offset+2])
 	offset += 2
@@ -139,11 +140,12 @@ func UnLz77Compress(bytes []byte) []byte {
 	sq2Bits := bytes[offset:offset+uint64(sq2BitsLen)]
 	offset += uint64(sq2BitsLen)
 
+	//fmt.Printf("sq1Bits %v sq2Bits %v huffmanCode %v\n", len(sq1Bits), len(sq2Bits), len(huffmanCode))
 	sq1Serial, sq2Serial := unCompressSQ(huffmanCode, sq1Bits, sq2Bits)
-
+	//fmt.Printf("sq1Serial %v sq2Serial %v\n", len(sq1Serial), len(sq2Serial))
 	sq1Serial = UnRLC(sq1Serial)
 	sq2Serial = UnRLC(sq2Serial)
-
+	//fmt.Printf("sq1Serial %v sq2Serial %v\n", len(sq1Serial), len(sq2Serial))
 
 	cl1 := &huffman.HuffmanAlg{}
 	cl1.InitDis()

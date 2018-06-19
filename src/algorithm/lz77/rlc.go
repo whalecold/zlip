@@ -3,7 +3,6 @@ package lz77
 import (
 	"algorithm/stack"
 	"algorithm/huffman"
-	"fmt"
 )
 
 func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
@@ -52,13 +51,11 @@ func RLC(bytes []byte) []byte {
 		stackNode.Push(bytes[i])
 	}
 	dealWithBytesAndStack(stackNode, &result)
-	fmt.Printf("rlc  %v\n", result)
-	return result
+	return bytes
 }
 
 func UnRLC(bytes []byte) []byte {
 	result := make([]byte, 0, RLC_MaxLength)
-	fmt.Printf("unrlc %v\n", bytes)
 	for i := 0; i < len(bytes); i++ {
 		if bytes[i] == RLC_Special {
 			tempLen := bytes[i+1]
@@ -70,5 +67,5 @@ func UnRLC(bytes []byte) []byte {
 			result = append(result, bytes[i])
 		}
 	}
-	return result
+	return bytes
 }

@@ -5,31 +5,32 @@ import (
 	"os"
 	"io"
 	"algorithm/lz77"
-	"log"
-	"runtime/pprof"
 	"sync"
 	"sort"
 	"encoding/binary"
-	"fmt"
 	"runtime"
 	"utils"
+	"fmt"
+	"time"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	f, err := os.Create("pprof")
-	if err != nil {
-		log.Fatal(err)
-	}
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+
+	time1 := time.Now().UnixNano()
+	//f, err := os.Create("pprof")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//pprof.StartCPUProfile(f)
+	//defer pprof.StopCPUProfile()
 
 	decode := flag.Bool("d", false, "true:decode false:encode")
 	sourceFile := flag.String("source", "", "source file")
 	destFile := flag.String("dest", "", "dest file")
 	flag.Parse()
 
-	ch := make(chan *Subsection, 10)
+	ch := make(chan *Subsection)
 	wg := sync.WaitGroup{}
 
 	sFile, err := os.Open(*sourceFile)
@@ -38,6 +39,8 @@ func main() {
 		panic(err.Error())
 	}
 
+
+	fileLock := &sync.RWMutex{}
 
 	var index int64
 	if *decode == false {
@@ -50,7 +53,7 @@ func main() {
 		var offset int64
 		for fileSize > lz77.LZ77_ChunkSize {
 			wg.Add(1)
-			go compressCor(sFile, wg, ch, offset, index, lz77.LZ77_ChunkSize)
+			go compressCor(sFile, wg, ch, offset, index, lz77.LZ77_ChunkSize, fileLock)
 			index++
 			offset+=lz77.LZ77_ChunkSize
 			fileSize -= lz77.LZ77_ChunkSize
@@ -58,7 +61,7 @@ func main() {
 
 		if fileSize != 0 {
 			wg.Add(1)
-			go compressCor(sFile, wg, ch, offset, index, fileSize)
+			go compressCor(sFile, wg, ch, offset, index, fileSize, fileLock)
 			index++
 		}
 	} else {
@@ -72,7 +75,6 @@ func main() {
 				panic("read file error")
 			}
 			contentLen := binary.BigEndian.Uint32(temp)
-			fmt.Printf("seq %v  length %v\n", index, contentLen)
 			temp = make([]byte, contentLen)
 			_, err = sFile.Read(temp)
 			if err != nil && err == io.EOF{
@@ -91,8 +93,6 @@ func main() {
 			}(index, *newBuffer, wg, ch)
 			index++
 		}
-		//newBuffer = huffman.EnCode(buffer)
-		//newBuffer = lz77.Lz77Compress(buffer, uint64(fileSize))
 	}
 
 	recv := make(SubsectionSlice, 0, index)
@@ -106,10 +106,14 @@ func main() {
 	for b := range ch {
 		recv = append(recv, b)
 		sort.Sort(recv)
-		for _, value := range recv {
+
+		needRemove := make([]int, 0, len(recv))
+		for i, value := range recv {
 			if value.Sequence == lastWriteSequeue {
 				dFile.Write(value.Content)
 				lastWriteSequeue++
+				needRemove = append(needRemove, i)
+				fmt.Printf("complete %.2f...\n", float64(lastWriteSequeue)/float64(index) * 100)
 				if lastWriteSequeue == index {
 					goto WriteEnd
 				}
@@ -117,8 +121,18 @@ func main() {
 				break
 			}
 		}
+
+		if len(needRemove) != 0 {
+			for i := len(needRemove); i > 0; i-- {
+				recv = append(recv[:i-1], recv[i:]...)
+			}
+		}
 	}
 
+	wg.Wait()
 	WriteEnd:
+		time2 := time.Now().UnixNano()
+		ms := (time2 - time1) / 1e6
+		fmt.Printf("cost time %vms \n", ms)
 	return
 }
