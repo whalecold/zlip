@@ -24,7 +24,7 @@ type DeflateCommon interface{
 
 type DeflateTree struct {
 	m map[uint16]*HuffmanNode 	//这个是距离出现次数的映射表
-	dishuffMap DeflateCodeMap	//这个是区间码到huffman字节码的映射表
+	huffmanSlice [][]byte	//这个是区间码到huffman字节码的映射表
 	node *HuffmanNode 	//deflate树的根节点
 	bits []byte //deflate树转成bits流的长度 用来存文件
 	condition DeflateCommon
@@ -40,7 +40,7 @@ func (deflate *DeflateTree)GetBits() []byte {
 
 func (deflat *DeflateTree)Init() {
 	deflat.m = make(map[uint16]*HuffmanNode)
-	deflat.dishuffMap = make(map[uint16][]byte)
+	deflat.huffmanSlice = make([][]byte, deflat.condition.GetBitsLen())
 }
 
 func (deflate *DeflateTree)AddElement(element uint16, length bool) {
@@ -74,7 +74,7 @@ func (deflate *DeflateTree)BuildTree() {
 func (deflate *DeflateTree)SerializeBitsStream() {
 	//max := 0
 	deflate.bits = make([]byte, deflate.condition.GetBitsLen())
-	for k, v := range deflate.dishuffMap {
+	for k, v := range deflate.huffmanSlice {
 		if int(k) >= deflate.condition.GetBitsLen() {
 			panic(fmt.Sprintf("BuildBitsStream error should be less than %v", deflate.condition.GetBitsLen()))
 		}
@@ -89,7 +89,7 @@ func (deflate *DeflateTree)SerializeBitsStream() {
 
 //根据deflate获取 字码映射表
 func (deflate *DeflateTree)BuildMap() {
-	deflate.dishuffMap = deflate.node.transTreeToDeflateCodeMap()
+	deflate.huffmanSlice = deflate.node.transTreeToDeflateCodeMap(deflate.condition.GetBitsLen())
 }
 
 //returs offset 表示bytes[0]的位偏移 return  | bit偏移 | byte 偏移
@@ -102,11 +102,11 @@ func (deflate *DeflateTree)EnCodeElement(ele uint16,
 		panic("EnCodeDistance error param offset")
 	}
 	zone, bitLen, lower := deflate.condition.GetZoneData(ele, length)
-	zoneBits, ok  := deflate.dishuffMap[zone]
-	if !ok {
-		deflate.Print()
-		panic(fmt.Sprintf("EnCodeElement error para %v", zone))
-	}
+	zoneBits := deflate.huffmanSlice[zone]
+	//if !ok {
+	//	deflate.Print()
+	//	panic(fmt.Sprintf("EnCodeElement error para %v", zone))
+	//}
 	for _, value := range zoneBits {
 		utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, value)
 		offset++
@@ -149,31 +149,31 @@ func (deflate *DeflateTree)UnSerializeBitsStream(bits  []byte) {
 	if len(bits) != deflate.condition.GetBitsLen() {
 		panic(fmt.Sprintf("BuildTreeByBits error length %v shoud be %v", len(bits), deflate.condition.GetBitsLen()))
 	}
-	deflate.dishuffMap = buildCodeMapByBits(bits)
+	deflate.huffmanSlice = buildCodeMapByBits(bits)
 }
 
 //根据码表map建立deflate树
 func (deflate *DeflateTree)BuildTreeByMap() {
-	deflate.node = buildDeflatTreeByMap(deflate.dishuffMap)
+	deflate.node = buildDeflatTreeByMap(deflate.huffmanSlice)
 }
 
 func (deflate *DeflateTree)Print() {
 	//fmt.Printf("start ")
-	for k, v := range deflate.dishuffMap {
+	for k, v := range deflate.huffmanSlice {
 		fmt.Printf("%v -- %b\n", k, v)
 	}
 }
 
 func (deflate *DeflateTree)Equal(other *DeflateTree) bool {
-	if deflate.dishuffMap == nil || other.dishuffMap == nil {
+	if deflate.huffmanSlice == nil || other.huffmanSlice == nil {
 		return false
 	}
 
-	for key, bytes := range deflate.dishuffMap {
-		obytes, ok := other.dishuffMap[key]
-		if !ok {
-			return false
-		}
+	for key, bytes := range deflate.huffmanSlice {
+		obytes := other.huffmanSlice[key]
+		//if !ok {
+		//	return false
+		//}
 		if len(bytes) != len(obytes) {
 			return false
 		}

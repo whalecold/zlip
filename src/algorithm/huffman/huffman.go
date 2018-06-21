@@ -218,9 +218,9 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 	接下来看树深(n) 加1的值 根据上面的规则 3 -- (00 + 这一层的个数) << 1  得到 100  下面的以此类推
 
  */
-func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
+func buildCodeMapByBits(bits  []byte) [][]byte {
 
-	m := make(DeflateCodeMap)
+	m := make([][]byte, len(bits))
 	deepth := getMaxDeepth(bits)
 	streamTemp := make([][]uint16, deepth + 1)
 	for l := 0; l < len(streamTemp); l++ {
@@ -260,7 +260,7 @@ func buildCodeMapByBits(bits  []byte) DeflateCodeMap {
 }
 
 //建立deflate树根据map
-func buildDeflatTreeByMap(m DeflateCodeMap) *HuffmanNode {
+func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
 
 	root := &HuffmanNode{}
 	var temp *HuffmanNode
@@ -281,7 +281,7 @@ func buildDeflatTreeByMap(m DeflateCodeMap) *HuffmanNode {
 					temp.LeftTree = newTemp
 					temp = newTemp
 					if index == len(v)-1 {
-						temp.Value = k
+						temp.Value = uint16(k)
 						temp.Leaf = true
 					}
 				}
@@ -299,7 +299,7 @@ func buildDeflatTreeByMap(m DeflateCodeMap) *HuffmanNode {
 					temp.RightTree = newTemp
 					temp = newTemp
 					if index == len(v)-1 {
-						temp.Value = k
+						temp.Value = uint16(k)
 						temp.Leaf = true
 					}
 				}

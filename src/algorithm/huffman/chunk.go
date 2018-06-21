@@ -276,11 +276,11 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 }
 
 //调用这个函数会破坏树的结构
-func (huff *HuffmanNode)transTreeToDeflateCodeMap() DeflateCodeMap {
+func (huff *HuffmanNode)transTreeToDeflateCodeMap(length int) [][]byte {
 	if huff == nil {
 		return nil
 	}
-	m := make(DeflateCodeMap)
+	result := make([][]byte, length)
 	s := stack.NewStack()
 	s.Push(huff)
 
@@ -298,14 +298,14 @@ func (huff *HuffmanNode)transTreeToDeflateCodeMap() DeflateCodeMap {
 		} else {
 			s.RPop()
 			if tree.Leaf == true {
-				m[tree.Value] = *utils.DeepClone(&huffmanCode).(*[]byte)
+				result[tree.Value] = *utils.DeepClone(&huffmanCode).(*[]byte)
 			}
 			if len(huffmanCode) > 0 {
 				huffmanCode = huffmanCode[:len(huffmanCode)-1]
 			}
 		}
 	}
-	return m
+	return result
 }
 
 func (huff *HuffmanNode)Printf() {
