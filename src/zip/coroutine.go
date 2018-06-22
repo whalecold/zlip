@@ -59,7 +59,6 @@ func compressTask(sFile *os.File, wg sync.WaitGroup, ch chan *Subsection, inCh c
 
 		lock.Lock()
 		sFile.Seek(recv.Offset, io.SeekStart)
-		fmt.Printf("read len %v   \n", len(readBuffer))
 		if _, err := sFile.Read(readBuffer); err != nil {
 			panic(err.Error())
 		}
@@ -69,7 +68,6 @@ func compressTask(sFile *os.File, wg sync.WaitGroup, ch chan *Subsection, inCh c
 		chunk.Content = lz77.Lz77Compress(readBuffer, outBuffer, uint64(recv.ReadSize))
 		lenInfo := make([]byte, 4)
 		binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
-		fmt.Printf("compressTask len %v ---\n", len(chunk.Content))
 		chunk.Content = append(lenInfo, chunk.Content...)
 
 		ch <- chunk
