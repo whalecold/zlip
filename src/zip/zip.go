@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"fmt"
 	"time"
+	"log"
+	"runtime/pprof"
 )
 
 func main() {
@@ -18,12 +20,12 @@ func main() {
 	runtime.GOMAXPROCS(cpuNum)
 
 	time1 := time.Now().UnixNano()
-	//f, err := os.Create("pprof")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//pprof.StartCPUProfile(f)
-	//defer pprof.StopCPUProfile()
+	f, err := os.Create("pprof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
 
 	decode := flag.Bool("d", false, "true:decode false:encode")
 	sourceFile := flag.String("source", "", "source file")

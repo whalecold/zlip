@@ -23,6 +23,7 @@ func (h *HuffmanAlg)InitLiteral() {
 	//h.common = &Literal{extraCode:LengthZone}
 }
 
+//runtime.mapaccess2 占了20%左右
 func (h *HuffmanAlg)AddElement(element uint16, length bool) {
 	h.tree.AddElement(element, length)
 }

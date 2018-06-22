@@ -7,4 +7,6 @@ const (
 	//zip中会进行剪枝 不会超过15的
 	HUFFMAN_CCLLen 		 = 32
 	HUFFMAN_CCLEndFlag 	 = HUFFMAN_CCLLen + 1 		//结束标志
+
+	HUFFMAN_ElementNum   = 2^16
 )

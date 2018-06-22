@@ -7,7 +7,7 @@ const (
 	LZ77_CmpPrevSize 	= LZ77_MaxWindowsSize
 	LZ77_WindowsMask 	= LZ77_MaxWindowsSize - 1
 	LZ77_MinCmpSize 	= 3
-	LZ77_MaxCmpNum 		= 16 					//最大比较次数
+	LZ77_MaxCmpNum 		= 8 					//最大比较次数
 	LZ77_MaxCmpLength 	= 256 					//最大比较长度
 	LZ77_EndFlag 		= 256 					//結束
 	LZ77_HeadInfo 		= "zls1129@gmail.com version 1.0.1"

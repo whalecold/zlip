@@ -23,7 +23,8 @@ type DeflateCommon interface{
 }
 
 type DeflateTree struct {
-	m map[uint16]*HuffmanNode 	//这个是距离出现次数的映射表
+	//m map[uint16]*HuffmanNode 	//这个是距离出现次数的映射表
+	elementSlice []*HuffmanNode 	//优化压缩耗时
 	huffmanSlice [][]byte	//这个是区间码到huffman字节码的映射表
 	node *HuffmanNode 	//deflate树的根节点
 	bits []byte //deflate树转成bits流的长度 用来存文件
@@ -39,7 +40,8 @@ func (deflate *DeflateTree)GetBits() []byte {
 }
 
 func (deflat *DeflateTree)Init() {
-	deflat.m = make(map[uint16]*HuffmanNode)
+	//deflat.m = make(map[uint16]*HuffmanNode)
+	deflat.elementSlice = make([]*HuffmanNode, deflat.condition.GetBitsLen())
 	deflat.huffmanSlice = make([][]byte, deflat.condition.GetBitsLen())
 }
 
@@ -48,23 +50,40 @@ func (deflate *DeflateTree)AddElement(element uint16, length bool) {
 	//zone, _, _ := getZoneByData(element, deflate.extraCode)
 	zone, _, _ := deflate.condition.GetZoneData(element, length)
 	//fmt.Printf("zone-------- %v\n", zone)
-	if m, ok := deflate.m[zone]; ok {
-		m.Power++
+	ele := deflate.elementSlice[zone]
+	if ele == nil {
+		deflate.elementSlice[zone] = &HuffmanNode{
+					Power: 1,
+					Value: zone,
+					LeftTree: nil,
+					RightTree: nil,
+					Leaf: true,
+				}
 	} else {
-		deflate.m[zone] = &HuffmanNode{
-			Power: 1,
-			Value: zone,
-			LeftTree: nil,
-			RightTree: nil,
-			Leaf: true,
-		}
+		ele.Power++
 	}
+	//if m, ok := deflate.m[zone]; ok {
+	//	m.Power++
+	//} else {
+	//	deflate.m[zone] = &HuffmanNode{
+	//		Power: 1,
+	//		Value: zone,
+	//		LeftTree: nil,
+	//		RightTree: nil,
+	//		Leaf: true,
+	//	}
+	//}
 }
 //建立deflate树
 func (deflate *DeflateTree)BuildTree() {
-	huffmanSlice := make(HuffmanNodeSlice, 0, len(deflate.m))
-	for _, v := range deflate.m {
-		huffmanSlice = append(huffmanSlice, v)
+	huffmanSlice := make(HuffmanNodeSlice, 0, len(deflate.elementSlice))
+	//for _, v := range deflate.m {
+	//	huffmanSlice = append(huffmanSlice, v)
+	//}
+	for _, v := range deflate.elementSlice {
+		if v != nil {
+			huffmanSlice = append(huffmanSlice, v)
+		}
 	}
 	sort.Sort(huffmanSlice)
 	deflate.node = buildTree(huffmanSlice)

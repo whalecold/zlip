@@ -14,23 +14,24 @@ func genHashNumber(bytes []byte) uint16 {
 	return uint16(hash & LZ77_WindowsMask)
 }
 
-//查看最长匹配串
+//查看最长匹配串 这个函数都是数组操作 不知道为什么会这么耗cpu~~
 func checkLargestCmpBytes(bytes []byte, curIndex , cmpIndex, maxSize uint64) uint64 {
 	//fmt.Printf("cur Index %v cmpIndex %v\n", curIndex, cmpIndex)
 	var length uint64
 	temp := curIndex
 	for {
-		if curIndex >= maxSize || bytes[curIndex] != bytes[cmpIndex] || cmpIndex >= temp  {
+		if curIndex >= maxSize || bytes[curIndex] != bytes[cmpIndex] ||
+			cmpIndex >= temp || length >= LZ77_MaxCmpLength - 1 {
 			break
 		}
 		curIndex++
 		cmpIndex++
 		length++
 	}
-	//匹配的长度不要超过这个值
-	if length >= LZ77_MaxCmpLength {
-		return 0
-	}
+	////匹配的长度不要超过这个值 把这个判断放上面可以减少判断次数
+	//if length >= LZ77_MaxCmpLength {
+	//	return 0
+	//}
 	return length
 }
 
