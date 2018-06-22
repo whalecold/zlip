@@ -15,7 +15,9 @@ import (
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	cpuNum := runtime.NumCPU()
+	runtime.GOMAXPROCS(cpuNum)
 
 	time1 := time.Now().UnixNano()
 	//f, err := os.Create("pprof")
@@ -31,6 +33,7 @@ func main() {
 	flag.Parse()
 
 	ch := make(chan *Subsection)
+
 	wg := sync.WaitGroup{}
 
 	sFile, err := os.Open(*sourceFile)
@@ -38,7 +41,6 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-
 
 	fileLock := &sync.RWMutex{}
 
@@ -49,21 +51,38 @@ func main() {
 			panic(err.Error())
 		}
 		sFile.Seek(0, io.SeekStart)
+		//var offset int64
+		//for fileSize > lz77.LZ77_ChunkSize {
+		//	wg.Add(1)
+		//	go compressCor(sFile, wg, ch, offset, index, lz77.LZ77_ChunkSize, fileLock)
+		//	index++
+		//	offset+=lz77.LZ77_ChunkSize
+		//	fileSize -= lz77.LZ77_ChunkSize
+		//}
+		//
+		//if fileSize != 0 {
+		//	wg.Add(1)
+		//	go compressCor(sFile, wg, ch, offset, index, fileSize, fileLock)
+		//	index++
+		//}
 
-		var offset int64
-		for fileSize > lz77.LZ77_ChunkSize {
-			wg.Add(1)
-			go compressCor(sFile, wg, ch, offset, index, lz77.LZ77_ChunkSize, fileLock)
+
+		index = fileSize / lz77.LZ77_ChunkSize
+		if fileSize % lz77.LZ77_ChunkSize != 0 {
 			index++
-			offset+=lz77.LZ77_ChunkSize
-			fileSize -= lz77.LZ77_ChunkSize
+		}
+		reqChan := make(chan *TaskInfo, cpuNum)
+		chPool := make([]chan *TaskInfo, cpuNum)
+		for i := 0; i < cpuNum; i++ {
+			chPool[i] = make(chan *TaskInfo)
+		}
+		wg.Add(1)
+		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.LZ77_ChunkSize)
+		//time.Sleep(time.Second)
+		for i := 0; i < cpuNum; i ++ {
+			go compressTask(sFile, wg , ch , chPool[i], reqChan, lz77.LZ77_ChunkSize, fileLock)
 		}
 
-		if fileSize != 0 {
-			wg.Add(1)
-			go compressCor(sFile, wg, ch, offset, index, fileSize, fileLock)
-			index++
-		}
 	} else {
 
 		for {
@@ -113,7 +132,7 @@ func main() {
 				dFile.Write(value.Content)
 				lastWriteSequeue++
 				needRemove = append(needRemove, i)
-				fmt.Printf("complete %.2f...\n", float64(lastWriteSequeue)/float64(index) * 100)
+				fmt.Printf("complete %.2f... size %v\n", float64(lastWriteSequeue)/float64(index) * 100, len(value.Content))
 				if lastWriteSequeue == index {
 					goto WriteEnd
 				}
