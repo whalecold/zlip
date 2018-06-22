@@ -32,7 +32,8 @@ func TestLz77Cmp(t *testing.T) {
 	//sre := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	//fmt.Printf("result : %v\n", string(sre))
 	fmt.Printf("result : %v\n", len(sre))
-	re := Lz77Compress(sre, uint64(len(sre)))
+	outBuff := make([]byte, LZ77_ChunkSize)
+	re := Lz77Compress(sre, outBuff[:0], uint64(len(sre)))
 	//fmt.Printf("result : %v\n", string(re))
 	fmt.Printf("result : %v\n", len(re))
 
@@ -51,8 +52,9 @@ func BenchmarkLz77Cmp(b *testing.B) {
 		"，我们理解了Huffman编码的思想，我们来看看distance的实际情况。ZIP中滑动窗口大小固定为32KB，也就是说，distance的值范围是1-32768。那么，通过上面`" +
 		"的方式，统计频率后，就得到32768个码字，按照上面这种方式可以构建出来。于是我们会遇到一个最大的问题，那就是这棵树太大了，怎么记录呢？好了，个人认为到`" +
 		"了ZIP的核心了，那就是码树应该怎么缩小，以及码树怎么记录的问题。")
+	outBuff := make([]byte, LZ77_ChunkSize)
 	for i := 0; i < b.N; i++ {
-		re := Lz77Compress(sre, uint64(len(sre)))
+		re := Lz77Compress(sre, outBuff[:0], uint64(len(sre)))
 		UnLz77Compress(re)
 	}
 }
