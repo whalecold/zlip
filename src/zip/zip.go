@@ -7,9 +7,7 @@ import (
 	"algorithm/lz77"
 	"sync"
 	"sort"
-	"encoding/binary"
 	"runtime"
-	"utils"
 	"fmt"
 	"time"
 )
@@ -32,9 +30,9 @@ func main() {
 	destFile := flag.String("dest", "", "dest file")
 	flag.Parse()
 
-	ch := make(chan *Subsection)
+	ch := make(chan *Subsection, cpuNum)
 
-	wg := sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
 
 	sFile, err := os.Open(*sourceFile)
 	defer sFile.Close()
@@ -43,6 +41,13 @@ func main() {
 	}
 
 	fileLock := &sync.RWMutex{}
+
+	reqChan := make(chan *TaskInfo, cpuNum)
+	chPool := make([]chan *TaskInfo, cpuNum)
+	for i := 0; i < cpuNum; i++ {
+		chPool[i] = make(chan *TaskInfo)
+	}
+
 
 	var index int64
 	if *decode == false {
@@ -71,47 +76,53 @@ func main() {
 		if fileSize % lz77.LZ77_ChunkSize != 0 {
 			index++
 		}
-		reqChan := make(chan *TaskInfo, cpuNum)
-		chPool := make([]chan *TaskInfo, cpuNum)
-		for i := 0; i < cpuNum; i++ {
-			chPool[i] = make(chan *TaskInfo)
-		}
 		wg.Add(1)
 		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.LZ77_ChunkSize)
-		//time.Sleep(time.Second)
 		for i := 0; i < cpuNum; i ++ {
+			wg.Add(1)
 			go compressTask(sFile, wg , ch , chPool[i], reqChan, lz77.LZ77_ChunkSize, fileLock)
 		}
 
 	} else {
+		//fmt.Printf("-------------\n")
+		//for {
+		//	temp := make([]byte, 4)
+		//	_, err := sFile.Read(temp)
+		//	if err != nil && err == io.EOF{
+		//		break
+		//	} else if err != nil {
+		//		panic("read file error")
+		//	}
+		//	contentLen := binary.BigEndian.Uint32(temp)
+		//	temp = make([]byte, contentLen)
+		//	_, err = sFile.Read(temp)
+		//	if err != nil && err == io.EOF{
+		//		break
+		//	} else if err != nil {
+		//		panic("read file error")
+		//	}
+		//
+		//	newBuffer := utils.DeepClone(&temp).(*[]byte)
+		//	wg.Add(1)
+		//	go func(index int64, newBuffer []byte, wg *sync.WaitGroup, ch chan *Subsection) {
+		//		chunk := &Subsection{Sequence:index}
+		//		outbuff := make([]byte, 0, 10)
+		//		chunk.Content = lz77.UnLz77Compress(newBuffer, outbuff)
+		//		ch <- chunk
+		//		wg.Done()
+		//	}(index, *newBuffer, wg, ch)
+		//	index++
+		//
+		//
+		//}
+		wg.Add(1)
+		go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
 
-		for {
-			temp := make([]byte, 4)
-			_, err := sFile.Read(temp)
-			if err != nil && err == io.EOF{
-				break
-			} else if err != nil {
-				panic("read file error")
-			}
-			contentLen := binary.BigEndian.Uint32(temp)
-			temp = make([]byte, contentLen)
-			_, err = sFile.Read(temp)
-			if err != nil && err == io.EOF{
-				break
-			} else if err != nil {
-				panic("read file error")
-			}
-
-			newBuffer := utils.DeepClone(&temp).(*[]byte)
+		for i := 0; i < cpuNum; i ++ {
 			wg.Add(1)
-			go func(index int64, newBuffer []byte, wg sync.WaitGroup, ch chan *Subsection) {
-				chunk := &Subsection{Sequence:index}
-				chunk.Content = lz77.UnLz77Compress(newBuffer)
-				ch <- chunk
-				wg.Done()
-			}(index, *newBuffer, wg, ch)
-			index++
+			go unCompressTask(wg , ch , chPool[i], reqChan)
 		}
+
 	}
 
 	recv := make(SubsectionSlice, 0, index)
@@ -132,7 +143,10 @@ func main() {
 				dFile.Write(value.Content)
 				lastWriteSequeue++
 				needRemove = append(needRemove, i)
-				fmt.Printf("complete %.2f... size %v\n", float64(lastWriteSequeue)/float64(index) * 100, len(value.Content))
+				if index != 0 {
+					fmt.Printf("complete %.2f... \n", float64(lastWriteSequeue)/float64(index) * 100)
+				}
+				//fmt.Printf("complete %v... size %v\n",  value.Sequence, len(value.Content))
 				if lastWriteSequeue == index {
 					goto WriteEnd
 				}
@@ -147,11 +161,10 @@ func main() {
 			}
 		}
 	}
-
-	wg.Wait()
 	WriteEnd:
 		time2 := time.Now().UnixNano()
 		ms := (time2 - time1) / 1e6
 		fmt.Printf("cost time %vms \n", ms)
+	wg.Wait()
 	return
 }

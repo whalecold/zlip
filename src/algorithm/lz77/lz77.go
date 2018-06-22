@@ -153,8 +153,7 @@ func UnLz77Compress(bytes []byte) []byte {
 	//fmt.Printf("read %v\n", bytes[offset:offset+uint64(distanceBitsLen)])
 	//disDeflateTree.Print()
 
-	lastResult := make([]byte, 0, 1024)
-
+	outBuffer := make([]byte, 0, LZ77_ChunkSize)
 	buffer := bytes[offset:]
 	//fmt.Printf("lastResult... len %b\n", buffer)
 	var resubyteoffset uint32
@@ -170,16 +169,16 @@ func UnLz77Compress(bytes []byte) []byte {
 			resubyteoffset += r
 			bitoffset = b
 			//fmt.Printf("dara %v, %v\n", getData, l)
-			nowLen := uint64(len(lastResult))
+			nowLen := uint64(len(outBuffer))
 			for i := uint64(0); i < length; i++ {
-				lastResult = append(lastResult, lastResult[nowLen-uint64(getData)+i])
+				outBuffer = append(outBuffer, outBuffer[nowLen-uint64(getData)+i])
 			}
 		} else if getData == huffman.HUFFMAN_EndFlag {
 			//fmt.Printf("end buffer \n")
 			break
 		} else {
-			lastResult = append(lastResult, byte(getData))
+			outBuffer = append(outBuffer, byte(getData))
 		}
 	}
-	return lastResult
+	return outBuffer
 }

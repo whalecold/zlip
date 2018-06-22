@@ -14,6 +14,8 @@ type TaskInfo struct {
 	Index 	int64
 	ReadSize int64
 	ReqCh 	chan *TaskInfo
+	UnCompress []byte
+	ReadLen 	int64
 }
 
 
@@ -42,7 +44,7 @@ func compressCor(sFile *os.File, wg sync.WaitGroup, ch chan<- *Subsection, offse
 }
 
 //任务池中的一个子任务
-func compressTask(sFile *os.File, wg sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan  *TaskInfo, readSize int64, lock *sync.RWMutex) {
+func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan  *TaskInfo, readSize int64, lock *sync.RWMutex) {
 	buffer := make([]byte, readSize)
 	compressBuffer := make([]byte, readSize)
 	reqCh <- &TaskInfo{ReqCh:inCh}
@@ -76,8 +78,8 @@ func compressTask(sFile *os.File, wg sync.WaitGroup, ch chan *Subsection, inCh c
 	wg.Done()
 }
 
-//想了一下好像也没有必要统一调度 各自协程解锁也可以解决这个问题啊- -！ 尴尬
-func dispatcher(dispChan chan *TaskInfo, wg sync.WaitGroup, cupNum int, fileSize, chunkSize int64) {
+//想了一下好像也没有必要统一调度 各自协程解锁也可以解决这个问题啊
+func dispatcher(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, fileSize, chunkSize int64) {
 	var endNum int
 	var index int64
 	var offset int64
@@ -107,3 +109,68 @@ func dispatcher(dispChan chan *TaskInfo, wg sync.WaitGroup, cupNum int, fileSize
 	}
 	wg.Done()
 }
+
+func dispatcherUn(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, sFile *os.File, needClose chan *Subsection) {
+
+	var endNum int
+	fileEnd := false
+	var index int64
+
+	for req := range dispChan {
+		if fileEnd == true {
+			endNum++
+			close(req.ReqCh)
+		} else {
+			temp := make([]byte, 4)
+			_, err := sFile.Read(temp)
+			if err != nil && err == io.EOF{
+				endNum++
+				fileEnd = true
+				close(req.ReqCh)
+			} else if err != nil {
+				panic("read file error")
+			} else {
+				contentLen := binary.BigEndian.Uint32(temp)
+				//fmt.Printf("read len %v  facet %v index %v\n", contentLen, len(req.UnCompress), index)
+				readBuffer := req.UnCompress[:contentLen]
+				_, err = sFile.Read(readBuffer)
+				if err != nil && err == io.EOF{
+					endNum++
+					fileEnd = true
+					close(req.ReqCh)
+				} else if err != nil {
+					panic("read file error")
+				} else {
+					req.ReqCh <- &TaskInfo{UnCompress:req.UnCompress, Index:index, ReadLen:int64(contentLen)}
+					index ++
+				}
+			}
+		}
+
+		if endNum >= cupNum {
+			close(needClose)
+			break
+		}
+	}
+
+	wg.Done()
+}
+
+func unCompressTask(wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan  *TaskInfo) {
+	//unCompressBuffer := make([]byte, lz77.LZ77_ChunkSize * 2)
+	readBuffer := make([]byte, lz77.LZ77_ChunkSize * 2)
+	reqCh <- &TaskInfo{ReqCh:inCh, UnCompress:readBuffer}
+	for recv := range inCh {
+		chunk := &Subsection{Sequence:recv.Index}
+		//outputBuffer := unCompressBuffer[:0]
+
+		//temp  := lz77.UnLz77Compress(recv.UnCompress[:recv.ReadLen])
+		//chunk.Content = *utils.DeepClone(&temp).(*[]byte)
+		chunk.Content  = lz77.UnLz77Compress(recv.UnCompress[:recv.ReadLen])
+		//fmt.Printf("recv --- %v  index %v 00 %v\n", len(recv.UnCompress[:recv.ReadLen]), recv.Index, len(chunk.Content))
+		ch <- chunk
+		reqCh <- &TaskInfo{ReqCh:inCh, UnCompress:readBuffer}
+	}
+	wg.Done()
+}
+
