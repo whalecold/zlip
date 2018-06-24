@@ -101,3 +101,4 @@ func ReadBitsLen(bytes []byte, bitOffset uint32, readLen uint16) (uint16, uint32
 	//走到这个肯定是程序出错了 找不到对应字符串是不能发生的
 	panic("ReadBitsLen failed !")
 }
+//hotfix test
