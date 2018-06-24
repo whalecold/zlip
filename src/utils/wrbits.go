@@ -102,3 +102,4 @@ func ReadBitsLen(bytes []byte, bitOffset uint32, readLen uint16) (uint16, uint32
 	panic("ReadBitsLen failed !")
 }
 //hotfix test
+//branchTest
