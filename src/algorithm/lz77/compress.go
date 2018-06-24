@@ -8,7 +8,7 @@ import (
 //先进行第一步压缩 生成cl1 cl2 和 压缩后的bits
 func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte ){
 
-	result := make([]uint16, 0, 1024)
+	result := make([]uint16, 0, LZ77_ChunkSize)
 	prevIndex := make([]uint64, LZ77_CmpPrevSize)
 	headIndex := make([]uint64, LZ77_CmpHeadSize)
 

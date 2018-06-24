@@ -33,7 +33,7 @@ func compressCor(sFile *os.File, wg sync.WaitGroup, ch chan<- *Subsection, offse
 	lock.Unlock()
 
 	outBuffer := make([]byte, 0, 1024 * 1024)
-	chunk.Content = lz77.Lz77Compress(buffer, outBuffer, uint64(readSize))
+	chunk.Content, _ = lz77.Lz77Compress(buffer, &outBuffer, uint64(readSize))
 	lenInfo := make([]byte, 4)
 	binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
 
@@ -67,7 +67,7 @@ func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh 
 		lock.Unlock()
 
 		outBuffer := compressBuffer[:0]
-		chunk.Content = lz77.Lz77Compress(readBuffer, outBuffer, uint64(recv.ReadSize))
+		chunk.Content, _ = lz77.Lz77Compress(readBuffer, &outBuffer, uint64(recv.ReadSize))
 		lenInfo := make([]byte, 4)
 		binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
 		chunk.Content = append(lenInfo, chunk.Content...)

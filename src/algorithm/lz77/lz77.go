@@ -58,7 +58,7 @@ func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 //第一个返回的map表示literal/length 出现的次数 第二个表示distance出现的次数 会对length和distance做一定的优化
 //映射参考 doc里面的两张图
 //([]byte, map[uint16]int, map[byte]int)
-func Lz77Compress(bytes, outBuffer []byte, size uint64) []byte {
+func Lz77Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
 	if len(bytes) < LZ77_MinCmpSize * 2 {
 		panic("func cmp bytes need large than 3")
 	}
@@ -93,17 +93,17 @@ func Lz77Compress(bytes, outBuffer []byte, size uint64) []byte {
 
 	//lastResult = append(lastResult, headInfoLen...)
 	//lastResult = append(lastResult, []byte(LZ77_HeadInfo)...)
-	outBuffer = append(outBuffer, huffman3Len...)
-	outBuffer = append(outBuffer, sq1BitsLen...)
-	outBuffer = append(outBuffer, sq2BitsLen...)
+	*outBuffer = append(*outBuffer, huffman3Len...)
+	*outBuffer = append(*outBuffer, sq1BitsLen...)
+	*outBuffer = append(*outBuffer, sq2BitsLen...)
 
 
-	outBuffer = append(outBuffer, huffman3...)
-	outBuffer = append(outBuffer, sq1Bits...)
-	outBuffer = append(outBuffer, sq2Bits...)
+	*outBuffer = append(*outBuffer, huffman3...)
+	*outBuffer = append(*outBuffer, sq1Bits...)
+	*outBuffer = append(*outBuffer, sq2Bits...)
 
-	outBuffer = append(outBuffer, huffmanCode...)
-	return outBuffer
+	*outBuffer = append(*outBuffer, huffmanCode...)
+	return *outBuffer, len(*outBuffer)
 }
 
 /* 压缩格式 单位 byte

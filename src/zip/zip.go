@@ -10,27 +10,34 @@ import (
 	"runtime"
 	"fmt"
 	"time"
-	"log"
-	"runtime/pprof"
+	//"log"
+	//"runtime/pprof"
+	_ "net/http/pprof"
+	"net/http"
 )
 
 func main() {
 
+	go http.ListenAndServe("0.0.0.0:8000", nil)
 	cpuNum := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpuNum)
 
 	time1 := time.Now().UnixNano()
-	f, err := os.Create("pprof")
-	if err != nil {
-		log.Fatal(err)
-	}
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+
+	//f, err := os.Create("pprof")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//pprof.StartCPUProfile(f)
+	//defer pprof.StopCPUProfile()
+
+	fmt.Printf("cpu num : %v..\n", cpuNum)
 
 	decode := flag.Bool("d", false, "true:decode false:encode")
 	sourceFile := flag.String("source", "", "source file")
 	destFile := flag.String("dest", "", "dest file")
 	flag.Parse()
+
 
 	ch := make(chan *Subsection, cpuNum)
 
@@ -58,22 +65,6 @@ func main() {
 			panic(err.Error())
 		}
 		sFile.Seek(0, io.SeekStart)
-		//var offset int64
-		//for fileSize > lz77.LZ77_ChunkSize {
-		//	wg.Add(1)
-		//	go compressCor(sFile, wg, ch, offset, index, lz77.LZ77_ChunkSize, fileLock)
-		//	index++
-		//	offset+=lz77.LZ77_ChunkSize
-		//	fileSize -= lz77.LZ77_ChunkSize
-		//}
-		//
-		//if fileSize != 0 {
-		//	wg.Add(1)
-		//	go compressCor(sFile, wg, ch, offset, index, fileSize, fileLock)
-		//	index++
-		//}
-
-
 		index = fileSize / lz77.LZ77_ChunkSize
 		if fileSize % lz77.LZ77_ChunkSize != 0 {
 			index++
@@ -86,37 +77,6 @@ func main() {
 		}
 
 	} else {
-		//fmt.Printf("-------------\n")
-		//for {
-		//	temp := make([]byte, 4)
-		//	_, err := sFile.Read(temp)
-		//	if err != nil && err == io.EOF{
-		//		break
-		//	} else if err != nil {
-		//		panic("read file error")
-		//	}
-		//	contentLen := binary.BigEndian.Uint32(temp)
-		//	temp = make([]byte, contentLen)
-		//	_, err = sFile.Read(temp)
-		//	if err != nil && err == io.EOF{
-		//		break
-		//	} else if err != nil {
-		//		panic("read file error")
-		//	}
-		//
-		//	newBuffer := utils.DeepClone(&temp).(*[]byte)
-		//	wg.Add(1)
-		//	go func(index int64, newBuffer []byte, wg *sync.WaitGroup, ch chan *Subsection) {
-		//		chunk := &Subsection{Sequence:index}
-		//		outbuff := make([]byte, 0, 10)
-		//		chunk.Content = lz77.UnLz77Compress(newBuffer, outbuff)
-		//		ch <- chunk
-		//		wg.Done()
-		//	}(index, *newBuffer, wg, ch)
-		//	index++
-		//
-		//
-		//}
 		wg.Add(1)
 		go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
 
@@ -148,6 +108,7 @@ func main() {
 				if index != 0 {
 					fmt.Printf("complete %.2f... \n", float64(lastWriteSequeue)/float64(index) * 100)
 				}
+
 				//fmt.Printf("complete %v... size %v\n",  value.Sequence, len(value.Content))
 				if lastWriteSequeue == index {
 					goto WriteEnd
@@ -167,6 +128,14 @@ func main() {
 		time2 := time.Now().UnixNano()
 		ms := (time2 - time1) / 1e6
 		fmt.Printf("cost time %vms \n", ms)
+
+
 	wg.Wait()
+	memStats := new(runtime.MemStats)
+	runtime.ReadMemStats(memStats)
+	//fmt.Printf("MemStats Info %+v\n", memStats)
+	fmt.Printf("MemStats Alloc %+v\n", memStats.Alloc)
+	fmt.Printf("MemStats HeapAlloc %+v\n", memStats.HeapAlloc)
+	fmt.Printf("MemStats HeapSys %+v\n", memStats.HeapSys)
 	return
 }
