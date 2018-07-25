@@ -6,7 +6,7 @@ import (
 )
 
 //先进行第一步压缩 生成cl1 cl2 和 压缩后的bits
-func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte ){
+func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 
 	result := make([]uint16, 0, LZ77_ChunkSize)
 	prevIndex := make([]uint64, LZ77_CmpPrevSize)
@@ -19,28 +19,27 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte ){
 	cl2 := &huffman.HuffmanAlg{}
 	cl2.InitLiteral()
 
-
 	for i := 0; i < LZ77_MinCmpSize; i++ {
 		result = append(result, uint16(bytes[i]))
-		cl2.AddElement(uint16(bytes[i]),false)
+		cl2.AddElement(uint16(bytes[i]), false)
 	}
 	//bytes = append(bytes, LZ77_EndFlag)
 
 	cl2.AddElement(huffman.HUFFMAN_EndFlag, false)
 	//小于三个字节
 	var index uint64
-	for index = LZ77_MinCmpSize; index + LZ77_MinCmpSize <= size;  {
+	for index = LZ77_MinCmpSize; index+LZ77_MinCmpSize <= size; {
 
 		//每次移动窗口都要更新值
 		updateHashBytes(bytes, index, prevIndex, headIndex)
 
-		hash := genHashNumber(bytes[index:index + LZ77_MinCmpSize])
+		hash := genHashNumber(bytes[index : index+LZ77_MinCmpSize])
 		cmpIndex := headIndex[hash]
 		if cmpIndex == 0 { //没有匹配到
 			result = append(result, uint16(bytes[index]))
 			cl2.AddElement(uint16(bytes[index]), false)
 			index++
-		} else {	//匹配到了
+		} else { //匹配到了
 
 			var maxCmpStart uint64
 			var maxCmpLength uint64
@@ -50,12 +49,12 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte ){
 
 				length := checkLargestCmpBytes(bytes, index, cmpIndex, size)
 
-				if maxCmpLength < length && index-cmpIndex < LZ77_MaxWindowsSize{
+				if maxCmpLength < length && index-cmpIndex < LZ77_MaxWindowsSize {
 					maxCmpLength = length
 					maxCmpStart = cmpIndex
 				}
 
-				cmpIndex = prevIndex[cmpIndex & LZ77_WindowsMask]
+				cmpIndex = prevIndex[cmpIndex&LZ77_WindowsMask]
 				if cmpIndex == 0 {
 					break
 				}
@@ -109,12 +108,12 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte ){
 	var bit uint32
 
 	result = append(result, huffman.HUFFMAN_EndFlag)
-	for i := 0; i < len(result); i++{
+	for i := 0; i < len(result); i++ {
 		//表示长度
 		if utils.ReadBitsHigh16(result[i], 0) == 1 {
 			utils.WriteBitsHigh16(&result[i], 0, 0)
 			//fmt.Printf("new ----- %v\n", temp)
-			bit = cl2.EnCodeElement(result[i], &huffmanCode, bits, &indexCode,true)
+			bit = cl2.EnCodeElement(result[i], &huffmanCode, bits, &indexCode, true)
 			bits = bit
 
 			i++
@@ -143,7 +142,7 @@ func compressCClSub(cl []byte, huff *huffman.HuffmanAlg) []byte {
 }
 
 //把cl1 cl2 进行第二部压缩 返回ccl 和bits
-func compressCCl(cl1 []byte, cl2 []byte) ([]byte, []byte, []byte){
+func compressCCl(cl1 []byte, cl2 []byte) ([]byte, []byte, []byte) {
 	ccl := &huffman.HuffmanAlg{}
 	ccl.InitCCL()
 	for _, value := range cl1 {

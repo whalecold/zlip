@@ -18,11 +18,11 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 	index := uint16(0)
 	for len(huffmanSlice) != 1 {
 		newNode := &HuffmanNode{
-			Power: huffmanSlice[0].Power + huffmanSlice[1].Power,
-			Value: index,
-			LeftTree: huffmanSlice[0],
+			Power:     huffmanSlice[0].Power + huffmanSlice[1].Power,
+			Value:     index,
+			LeftTree:  huffmanSlice[0],
 			RightTree: huffmanSlice[1],
-			Leaf: false,
+			Leaf:      false,
 		}
 		//fmt.Printf("huffmanSlice[0] %v   %v\n",
 		//	huffmanSlice[0].Value, huffmanSlice[1].Value)
@@ -34,7 +34,6 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 
 	return transDeflateTree(huffmanSlice[0], moveDeflateTree)
 }
-
 
 //把huffman树转成deflate树
 func transDeflateTree(root *HuffmanNode, f func(ele *list.Element, deepth int)) *HuffmanNode {
@@ -77,7 +76,7 @@ func transDeflateTree(root *HuffmanNode, f func(ele *list.Element, deepth int)) 
 			ele := li.Back()
 			f(ele, deepth)
 			li = list.New()
-			deepth ++
+			deepth++
 
 		}
 	}
@@ -90,7 +89,7 @@ func transDeflateTree(root *HuffmanNode, f func(ele *list.Element, deepth int)) 
 func moveDeflateTree(ele *list.Element, deepth int) {
 	var emptyEle *list.Element
 	var leafNodeNum int
-	emptyList := list.New() 	//存储空节点的队列
+	emptyList := list.New() //存储空节点的队列
 	for temp := ele; temp != nil; temp = temp.Prev() {
 		tempNode := temp.Value.(*HuffmanNode)
 
@@ -113,8 +112,6 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 		}
 	}
 
-
-
 	nodeSort := make([]*HuffmanNode, 0, leafNodeNum)
 	for temp := ele; temp != nil; temp = temp.Prev() {
 		sortNode := temp.Value.(*HuffmanNode)
@@ -125,12 +122,11 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 		}
 	}
 
-
 	for index := 0; index < len(nodeSort); index++ {
 		var maxNum uint16
 		var maxIndex int
 		var i int
-		for ; i < len(nodeSort) - index; i++ {
+		for ; i < len(nodeSort)-index; i++ {
 			if nodeSort[i].Value > maxNum {
 				maxNum = nodeSort[i].Value
 				maxIndex = i
@@ -150,11 +146,11 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 			m.Power++
 		} else {
 			huffmanMap[value] = &HuffmanNode{
-				Power: 1,
-				Value: uint16(value),
-				LeftTree: nil,
+				Power:     1,
+				Value:     uint16(value),
+				LeftTree:  nil,
 				RightTree: nil,
-				Leaf: true,
+				Leaf:      true,
 			}
 		}
 	}
@@ -217,12 +213,12 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 也就是 4 -- 00 ， 然后根据`同一深度的子节点 右边的值一定比左边的大` 这一特性 找到 12  -- 01 的映射
 	接下来看树深(n) 加1的值 根据上面的规则 3 -- (00 + 这一层的个数) << 1  得到 100  下面的以此类推
 
- */
-func buildCodeMapByBits(bits  []byte) [][]byte {
+*/
+func buildCodeMapByBits(bits []byte) [][]byte {
 
 	m := make([][]byte, len(bits))
 	deepth := getMaxDeepth(bits)
-	streamTemp := make([][]uint16, deepth + 1)
+	streamTemp := make([][]uint16, deepth+1)
 	for l := 0; l < len(streamTemp); l++ {
 		streamTemp[l] = make([]uint16, 0, 32)
 	}
@@ -238,7 +234,7 @@ func buildCodeMapByBits(bits  []byte) [][]byte {
 	//记录树深(n-1)的第一个码的值和长度
 	var lastCode, lastLength uint32
 	for huffmanLen := 1; huffmanLen < len(streamTemp); huffmanLen++ {
-		if len(streamTemp[huffmanLen]) == 0 && flag == false{
+		if len(streamTemp[huffmanLen]) == 0 && flag == false {
 			continue
 		}
 		//deflate树的最左边的节点始终为0
@@ -268,10 +264,10 @@ func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
 		temp = root
 		for index, bit := range v {
 			if bit == 0 {
-				if temp.LeftTree != nil && index == len(v) - 1{
+				if temp.LeftTree != nil && index == len(v)-1 {
 					panic("buildDeflatTreeByMap error LeftTree")
 				}
-				if temp.LeftTree != nil && index != len(v) - 1 && temp.LeftTree.Leaf == true {
+				if temp.LeftTree != nil && index != len(v)-1 && temp.LeftTree.Leaf == true {
 					panic("buildDeflatTreeByMap error LeftTree 2")
 				}
 				if temp.LeftTree != nil {
@@ -286,10 +282,10 @@ func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
 					}
 				}
 			} else if bit == 1 {
-				if temp.RightTree != nil && index == len(v) - 1{
+				if temp.RightTree != nil && index == len(v)-1 {
 					panic("buildDeflatTreeByMap error RightTree")
 				}
-				if temp.RightTree != nil && index != len(v) - 1 && temp.RightTree.Leaf == true {
+				if temp.RightTree != nil && index != len(v)-1 && temp.RightTree.Leaf == true {
 					panic("buildDeflatTreeByMap error RightTree 2")
 				}
 				if temp.RightTree != nil {
@@ -310,5 +306,3 @@ func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
 	}
 	return root
 }
-
-

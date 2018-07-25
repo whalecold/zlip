@@ -1,12 +1,12 @@
 package huffman
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 type TestNode struct {
-	Data uint16
+	Data   uint16
 	Length bool
 }
 
@@ -14,7 +14,7 @@ func TestLiteralTree1(t *testing.T) {
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	dis := []uint16{'h', 'e', 'l', 'l'}
-	tree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	tree := &DeflateTree{condition: &Literal{extraCode: LengthZone}}
 	tree.Init()
 	for _, value := range dis {
 		tree.AddElement(value, false)
@@ -27,7 +27,7 @@ func TestLiteralTree1(t *testing.T) {
 	tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
-	newTree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	newTree := &DeflateTree{condition: &Literal{extraCode: LengthZone}}
 	newTree.Init()
 
 	newTree.UnSerializeBitsStream(tree.bits)
@@ -44,11 +44,11 @@ func TestLiteralTree1(t *testing.T) {
 func TestLiteralTree2(t *testing.T) {
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
-	literalSlice := []*TestNode{{'1', false},{'h', false},
-	{'e', false},
-	{126, true}, {11, true}, {'w', false},
-	{256, false}}
-	tree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	literalSlice := []*TestNode{{'1', false}, {'h', false},
+		{'e', false},
+		{126, true}, {11, true}, {'w', false},
+		{256, false}}
+	tree := &DeflateTree{condition: &Literal{extraCode: LengthZone}}
 	tree.Init()
 
 	for _, value := range literalSlice {
@@ -60,7 +60,7 @@ func TestLiteralTree2(t *testing.T) {
 	tree.Print()
 	//fmt.Printf("tree : %v\n", tree.bits)
 
-	newTree := &DeflateTree{condition:&Literal{extraCode:LengthZone}}
+	newTree := &DeflateTree{condition: &Literal{extraCode: LengthZone}}
 	newTree.Init()
 
 	newTree.UnSerializeBitsStream(tree.bits)
@@ -78,7 +78,7 @@ func TestLiteralTree2(t *testing.T) {
 	var resubyteoffset uint32
 	var bitoffset uint32
 	for {
-		getData, r, b, l:= newTree.DecodeEle(code[resubyteoffset:], bitoffset)
+		getData, r, b, l := newTree.DecodeEle(code[resubyteoffset:], bitoffset)
 		resubyteoffset += r
 		bitoffset = b
 		if l == true {

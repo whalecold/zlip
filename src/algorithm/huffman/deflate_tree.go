@@ -1,51 +1,50 @@
 package huffman
 
 import (
-	"sort"
 	"fmt"
+	"sort"
 	"utils"
 )
 
 type DelateBitsStreamInfo struct {
-	Value uint32	//区间值
-	BitsLen byte 	//树的深度 也可以称为树的信息
+	Value   uint32 //区间值
+	BitsLen byte   //树的深度 也可以称为树的信息
 }
 
 type DelateBitsArray []*DelateBitsStreamInfo
 
-
 //通用接口
-type DeflateCommon interface{
-	GetZoneData(uint16, bool)  (uint16, uint16, uint16)
+type DeflateCommon interface {
+	GetZoneData(uint16, bool) (uint16, uint16, uint16)
 	//bool 表示是否是长度
-	GetSourceCode(uint16)  (uint16, uint16, bool)
+	GetSourceCode(uint16) (uint16, uint16, bool)
 	GetBitsLen() int
 }
 
 type DeflateTree struct {
 	//m map[uint16]*HuffmanNode 	//这个是距离出现次数的映射表
-	elementSlice []*HuffmanNode 	//优化压缩耗时
-	huffmanSlice [][]byte	//这个是区间码到huffman字节码的映射表
-	node *HuffmanNode 	//deflate树的根节点
-	bits []byte //deflate树转成bits流的长度 用来存文件
-	condition DeflateCommon
+	elementSlice []*HuffmanNode //优化压缩耗时
+	huffmanSlice [][]byte       //这个是区间码到huffman字节码的映射表
+	node         *HuffmanNode   //deflate树的根节点
+	bits         []byte         //deflate树转成bits流的长度 用来存文件
+	condition    DeflateCommon
 }
 
-func (deflate *DeflateTree)BitesLen() uint32 {
+func (deflate *DeflateTree) BitesLen() uint32 {
 	return uint32(len(deflate.bits))
 }
 
-func (deflate *DeflateTree)GetBits() []byte {
+func (deflate *DeflateTree) GetBits() []byte {
 	return deflate.bits
 }
 
-func (deflat *DeflateTree)Init() {
+func (deflat *DeflateTree) Init() {
 	//deflat.m = make(map[uint16]*HuffmanNode)
 	deflat.elementSlice = make([]*HuffmanNode, deflat.condition.GetBitsLen())
 	deflat.huffmanSlice = make([][]byte, deflat.condition.GetBitsLen())
 }
 
-func (deflate *DeflateTree)AddElement(element uint16, length bool) {
+func (deflate *DeflateTree) AddElement(element uint16, length bool) {
 
 	//zone, _, _ := getZoneByData(element, deflate.extraCode)
 	zone, _, _ := deflate.condition.GetZoneData(element, length)
@@ -53,12 +52,12 @@ func (deflate *DeflateTree)AddElement(element uint16, length bool) {
 	ele := deflate.elementSlice[zone]
 	if ele == nil {
 		deflate.elementSlice[zone] = &HuffmanNode{
-					Power: 1,
-					Value: zone,
-					LeftTree: nil,
-					RightTree: nil,
-					Leaf: true,
-				}
+			Power:     1,
+			Value:     zone,
+			LeftTree:  nil,
+			RightTree: nil,
+			Leaf:      true,
+		}
 	} else {
 		ele.Power++
 	}
@@ -74,8 +73,9 @@ func (deflate *DeflateTree)AddElement(element uint16, length bool) {
 	//	}
 	//}
 }
+
 //建立deflate树
-func (deflate *DeflateTree)BuildTree() {
+func (deflate *DeflateTree) BuildTree() {
 	huffmanSlice := make(HuffmanNodeSlice, 0, len(deflate.elementSlice))
 	//for _, v := range deflate.m {
 	//	huffmanSlice = append(huffmanSlice, v)
@@ -90,7 +90,7 @@ func (deflate *DeflateTree)BuildTree() {
 }
 
 //根据字码映射表获取字节流 相当于是序列化
-func (deflate *DeflateTree)SerializeBitsStream() {
+func (deflate *DeflateTree) SerializeBitsStream() {
 	//max := 0
 	deflate.bits = make([]byte, deflate.condition.GetBitsLen())
 	for k, v := range deflate.huffmanSlice {
@@ -107,16 +107,16 @@ func (deflate *DeflateTree)SerializeBitsStream() {
 }
 
 //根据deflate获取 字码映射表
-func (deflate *DeflateTree)BuildMap() {
+func (deflate *DeflateTree) BuildMap() {
 	deflate.huffmanSlice = deflate.node.transTreeToDeflateCodeMap(deflate.condition.GetBitsLen())
 }
 
 //returs offset 表示bytes[0]的位偏移 return  | bit偏移 | byte 偏移
-func (deflate *DeflateTree)EnCodeElement(ele uint16,
-										bytes *[]byte,
-										offset uint32,
-										dataSet *uint64,
-									 	length bool ) (uint32){
+func (deflate *DeflateTree) EnCodeElement(ele uint16,
+	bytes *[]byte,
+	offset uint32,
+	dataSet *uint64,
+	length bool) uint32 {
 	if offset > 7 {
 		panic("EnCodeDistance error param offset")
 	}
@@ -130,13 +130,13 @@ func (deflate *DeflateTree)EnCodeElement(ele uint16,
 		utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, value)
 		offset++
 		if checkBytesFull(bytes, &offset) == true {
-			*dataSet ++
+			*dataSet++
 		}
 	}
 
 	if bitLen != 0 {
 		sur := ele % lower
-		for i := 16-bitLen; i < 16; i++ {
+		for i := 16 - bitLen; i < 16; i++ {
 			v := utils.ReadBitsHigh16(sur, uint32(i))
 			utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, v)
 			offset++
@@ -145,14 +145,14 @@ func (deflate *DeflateTree)EnCodeElement(ele uint16,
 			}
 		}
 	}
-	return  offset
+	return offset
 }
 
 //传入参数 bytes bits流 offset第一个字节之后的偏移位置
 //return 第1个返回实际距离 第2个参数表示返回字节偏移  第二个参数表示bits偏移
 //return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7) | bool表示是否是长度 true 是
-func (deflate *DeflateTree)DecodeEle(bytes []byte,
-									offset uint32) (uint16, uint32, uint32, bool) {
+func (deflate *DeflateTree) DecodeEle(bytes []byte,
+	offset uint32) (uint16, uint32, uint32, bool) {
 	code, off, bits := deflate.node.decodeCodeDeflate(bytes, offset)
 	//bitsLen, lower := getDataByZone(code, deflate.extraCode)
 	bitsLen, lower, flag := deflate.condition.GetSourceCode(code)
@@ -164,7 +164,7 @@ func (deflate *DeflateTree)DecodeEle(bytes []byte,
 }
 
 //根据位数来重新获得码表映射
-func (deflate *DeflateTree)UnSerializeBitsStream(bits  []byte) {
+func (deflate *DeflateTree) UnSerializeBitsStream(bits []byte) {
 	if len(bits) != deflate.condition.GetBitsLen() {
 		panic(fmt.Sprintf("BuildTreeByBits error length %v shoud be %v", len(bits), deflate.condition.GetBitsLen()))
 	}
@@ -172,18 +172,18 @@ func (deflate *DeflateTree)UnSerializeBitsStream(bits  []byte) {
 }
 
 //根据码表map建立deflate树
-func (deflate *DeflateTree)BuildTreeByMap() {
+func (deflate *DeflateTree) BuildTreeByMap() {
 	deflate.node = buildDeflatTreeByMap(deflate.huffmanSlice)
 }
 
-func (deflate *DeflateTree)Print() {
+func (deflate *DeflateTree) Print() {
 	//fmt.Printf("start ")
 	for k, v := range deflate.huffmanSlice {
 		fmt.Printf("%v -- %b\n", k, v)
 	}
 }
 
-func (deflate *DeflateTree)Equal(other *DeflateTree) bool {
+func (deflate *DeflateTree) Equal(other *DeflateTree) bool {
 	if deflate.huffmanSlice == nil || other.huffmanSlice == nil {
 		return false
 	}

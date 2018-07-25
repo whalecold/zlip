@@ -1,9 +1,9 @@
 package main
 
 import (
-	"testing"
-	"sort"
 	"fmt"
+	"sort"
+	"testing"
 )
 
 func TestSubsectionSlice_Len(t *testing.T) {

@@ -6,20 +6,17 @@ import "fmt"
 
 //{min max distance, bits, code}
 var DistanceZone = [][]uint16{
-					{1, 1, 0, 0}, {2, 2, 0, 1}, {3, 3, 0, 2}, {4, 4, 0, 3},
-					{5, 6, 1, 4}, {7, 8, 1, 5},
-					{9, 12, 2, 6}, {13, 16, 2, 7}, {17, 24, 3, 8}, {25, 32, 3, 9},
-					{33, 48, 4, 10}, {49, 64, 4, 11}, {65, 96, 5, 12},
-					{97, 128, 5, 13}, {129, 192, 6, 14}, {193, 256, 6, 15},
-					{257, 384, 7, 16}, {385, 512, 7, 17}, {513, 768, 8, 18},
-					{769, 1024, 8, 19}, {1025, 1536, 9, 20}, {1537, 2048, 9, 21},
-					{2049, 3072, 10, 22}, {3073, 4096, 10, 23}, {4097, 6144, 11, 24},
-					{6145, 8192, 11, 25}, {8193, 12288, 12, 26},
-					{12289, 16384, 12, 27}, {16385, 24576, 13, 28},
-					{24577, 32768, 13, 29}}
-
-
-
+	{1, 1, 0, 0}, {2, 2, 0, 1}, {3, 3, 0, 2}, {4, 4, 0, 3},
+	{5, 6, 1, 4}, {7, 8, 1, 5},
+	{9, 12, 2, 6}, {13, 16, 2, 7}, {17, 24, 3, 8}, {25, 32, 3, 9},
+	{33, 48, 4, 10}, {49, 64, 4, 11}, {65, 96, 5, 12},
+	{97, 128, 5, 13}, {129, 192, 6, 14}, {193, 256, 6, 15},
+	{257, 384, 7, 16}, {385, 512, 7, 17}, {513, 768, 8, 18},
+	{769, 1024, 8, 19}, {1025, 1536, 9, 20}, {1537, 2048, 9, 21},
+	{2049, 3072, 10, 22}, {3073, 4096, 10, 23}, {4097, 6144, 11, 24},
+	{6145, 8192, 11, 25}, {8193, 12288, 12, 26},
+	{12289, 16384, 12, 27}, {16385, 24576, 13, 28},
+	{24577, 32768, 13, 29}}
 
 //{min max length, bits, code}
 var LengthZone = [][]uint16{
@@ -34,28 +31,27 @@ var LengthZone = [][]uint16{
 	{163, 194, 5, 282}, {195, 226, 5, 283},
 	{227, 257, 5, 284}, {258, 258, 0, 285}}
 
-
 //{zone, bits lower}
-func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16){
+func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16) {
 	for _, value := range data {
 		if distance <= uint16(value[1]) {
 			return value[3], value[2], value[0]
 		}
 	}
-	panic(fmt.Sprintf("getZoneByDistance : error param %v " +
+	panic(fmt.Sprintf("getZoneByDistance : error param %v "+
 		"(check if init)", distance))
 }
 
 //{zone, bits lower}
 func GetZoneByDis(distance uint16) (uint16, uint16, uint16) {
-	return  getZoneByData(distance, DistanceZone)
+	return getZoneByData(distance, DistanceZone)
 }
 func GetZoneByLength(distance uint16) (uint16, uint16, uint16) {
-	return  getZoneByData(distance, LengthZone)
+	return getZoneByData(distance, LengthZone)
 }
 
 //返回 bits扩展位置 最小值
-func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16){
+func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16) {
 	for _, value := range data {
 		if value[3] == zone {
 			return value[2], value[0]
@@ -65,10 +61,10 @@ func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16){
 }
 
 func GetDisByData(zone uint16) (uint16, uint16) {
-	return  getDataByZone(zone, DistanceZone)
+	return getDataByZone(zone, DistanceZone)
 }
-func GetLengthByData(zone uint16)(uint16, uint16) {
-	return  getDataByZone(zone, LengthZone)
+func GetLengthByData(zone uint16) (uint16, uint16) {
+	return getDataByZone(zone, LengthZone)
 }
 
 func getMaxDeepth(bits []byte) int {
@@ -81,7 +77,7 @@ func getMaxDeepth(bits []byte) int {
 	return int(max)
 }
 
-func CompareTwoBytes(l , m []byte) bool {
+func CompareTwoBytes(l, m []byte) bool {
 	if len(l) != len(m) {
 		return false
 	}

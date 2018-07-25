@@ -2,10 +2,10 @@ package huffman
 
 //这个表包括literal 和 length
 type Literal struct {
-	extraCode [][]uint16	//码表
+	extraCode [][]uint16 //码表
 }
 
-func (l *Literal)GetZoneData(liter uint16, length bool)  (uint16, uint16, uint16){
+func (l *Literal) GetZoneData(liter uint16, length bool) (uint16, uint16, uint16) {
 
 	if length == false {
 		return liter, 0, liter
@@ -14,7 +14,7 @@ func (l *Literal)GetZoneData(liter uint16, length bool)  (uint16, uint16, uint16
 	}
 }
 
-func (l *Literal)GetSourceCode(code uint16)  (uint16, uint16, bool) {
+func (l *Literal) GetSourceCode(code uint16) (uint16, uint16, bool) {
 	if code <= HUFFMAN_LiteralLimit {
 		return 0, code, false
 	} else {
@@ -23,6 +23,6 @@ func (l *Literal)GetSourceCode(code uint16)  (uint16, uint16, bool) {
 	}
 }
 
-func (l *Literal)GetBitsLen() int {
+func (l *Literal) GetBitsLen() int {
 	return 256 + 1 + len(l.extraCode)
 }

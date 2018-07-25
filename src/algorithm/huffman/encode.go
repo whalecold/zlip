@@ -20,8 +20,7 @@ func EnCode(bytes []byte) []byte {
 	head := make([]byte, 4)
 	binary.BigEndian.PutUint32(head, uint32(treeLen))
 
-
-	huffmanBuffer := make([]byte, 0, len(bytes) + len(head) + treeLen + 4)
+	huffmanBuffer := make([]byte, 0, len(bytes)+len(head)+treeLen+4)
 	huffmanBuffer = append(huffmanBuffer, head...)
 
 	huffmanBuffer = append(huffmanBuffer, serial...)
@@ -61,9 +60,7 @@ func EnCode(bytes []byte) []byte {
 	bitLenByte := make([]byte, 4)
 	binary.BigEndian.PutUint32(bitLenByte, bitLen)
 
-
 	huffmanBuffer = append(huffmanBuffer, bitLenByte...)
-
 
 	huffmanBuffer = append(huffmanBuffer, bitBuffer...)
 	//fmt.Printf("++++++bitLen %v  stream %08b\n", bitLen, bitBuffer)

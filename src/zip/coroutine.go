@@ -1,28 +1,27 @@
 package main
 
 import (
-	"sync"
 	"algorithm/lz77"
-	"io"
-	"os"
 	"encoding/binary"
 	"fmt"
+	"io"
+	"os"
+	"sync"
 )
 
 type TaskInfo struct {
-	Offset  int64
-	Index 	int64
-	ReadSize int64
-	ReqCh 	chan *TaskInfo
+	Offset     int64
+	Index      int64
+	ReadSize   int64
+	ReqCh      chan *TaskInfo
 	UnCompress []byte
-	ReadLen 	int64
+	ReadLen    int64
 }
-
 
 func compressCor(sFile *os.File, wg sync.WaitGroup, ch chan<- *Subsection, offset, index, readSize int64, lock *sync.RWMutex) {
 
 	buffer := make([]byte, readSize)
-	chunk := &Subsection{Sequence:index}
+	chunk := &Subsection{Sequence: index}
 	//syscall.Flock(int(sFile.Fd()), syscall.LOCK_SH)		这里的文件锁不知道为什么不能用了
 	lock.Lock()
 	sFile.Seek(offset, io.SeekStart)
@@ -32,7 +31,7 @@ func compressCor(sFile *os.File, wg sync.WaitGroup, ch chan<- *Subsection, offse
 	}
 	lock.Unlock()
 
-	outBuffer := make([]byte, 0, 1024 * 1024)
+	outBuffer := make([]byte, 0, 1024*1024)
 	chunk.Content, _ = lz77.Lz77Compress(buffer, &outBuffer, uint64(readSize))
 	lenInfo := make([]byte, 4)
 	binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
@@ -44,12 +43,12 @@ func compressCor(sFile *os.File, wg sync.WaitGroup, ch chan<- *Subsection, offse
 }
 
 //任务池中的一个子任务
-func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan  *TaskInfo, readSize int64, lock *sync.RWMutex) {
+func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan *TaskInfo, readSize int64, lock *sync.RWMutex) {
 	buffer := make([]byte, readSize)
 	compressBuffer := make([]byte, readSize)
-	reqCh <- &TaskInfo{ReqCh:inCh}
+	reqCh <- &TaskInfo{ReqCh: inCh}
 	for recv := range inCh {
-		chunk := &Subsection{Sequence:recv.Index}
+		chunk := &Subsection{Sequence: recv.Index}
 		var readBuffer []byte
 		if recv.ReadSize == readSize {
 			readBuffer = buffer
@@ -73,7 +72,7 @@ func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh 
 		chunk.Content = append(lenInfo, chunk.Content...)
 
 		ch <- chunk
-		reqCh <- &TaskInfo{ReqCh:inCh}
+		reqCh <- &TaskInfo{ReqCh: inCh}
 	}
 	wg.Done()
 }
@@ -84,7 +83,7 @@ func dispatcher(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, fileSiz
 	var index int64
 	var offset int64
 	for req := range dispChan {
-		taskInfo := &TaskInfo{Index:index, Offset:offset}
+		taskInfo := &TaskInfo{Index: index, Offset: offset}
 		if fileSize == 0 {
 			close(req.ReqCh)
 			endNum++
@@ -123,7 +122,7 @@ func dispatcherUn(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, sFile
 		} else {
 			temp := make([]byte, 4)
 			_, err := sFile.Read(temp)
-			if err != nil && err == io.EOF{
+			if err != nil && err == io.EOF {
 				endNum++
 				fileEnd = true
 				close(req.ReqCh)
@@ -134,15 +133,15 @@ func dispatcherUn(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, sFile
 				//fmt.Printf("read len %v  facet %v index %v\n", contentLen, len(req.UnCompress), index)
 				readBuffer := req.UnCompress[:contentLen]
 				_, err = sFile.Read(readBuffer)
-				if err != nil && err == io.EOF{
+				if err != nil && err == io.EOF {
 					endNum++
 					fileEnd = true
 					close(req.ReqCh)
 				} else if err != nil {
 					panic("read file error")
 				} else {
-					req.ReqCh <- &TaskInfo{UnCompress:req.UnCompress, Index:index, ReadLen:int64(contentLen)}
-					index ++
+					req.ReqCh <- &TaskInfo{UnCompress: req.UnCompress, Index: index, ReadLen: int64(contentLen)}
+					index++
 				}
 			}
 		}
@@ -156,21 +155,20 @@ func dispatcherUn(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, sFile
 	wg.Done()
 }
 
-func unCompressTask(wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan  *TaskInfo) {
+func unCompressTask(wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan *TaskInfo) {
 	//unCompressBuffer := make([]byte, lz77.LZ77_ChunkSize * 2)
-	readBuffer := make([]byte, lz77.LZ77_ChunkSize * 2)
-	reqCh <- &TaskInfo{ReqCh:inCh, UnCompress:readBuffer}
+	readBuffer := make([]byte, lz77.LZ77_ChunkSize*2)
+	reqCh <- &TaskInfo{ReqCh: inCh, UnCompress: readBuffer}
 	for recv := range inCh {
-		chunk := &Subsection{Sequence:recv.Index}
+		chunk := &Subsection{Sequence: recv.Index}
 		//outputBuffer := unCompressBuffer[:0]
 
 		//temp  := lz77.UnLz77Compress(recv.UnCompress[:recv.ReadLen])
 		//chunk.Content = *utils.DeepClone(&temp).(*[]byte)
-		chunk.Content  = lz77.UnLz77Compress(recv.UnCompress[:recv.ReadLen])
+		chunk.Content = lz77.UnLz77Compress(recv.UnCompress[:recv.ReadLen])
 		//fmt.Printf("recv --- %v  index %v 00 %v\n", len(recv.UnCompress[:recv.ReadLen]), recv.Index, len(chunk.Content))
 		ch <- chunk
-		reqCh <- &TaskInfo{ReqCh:inCh, UnCompress:readBuffer}
+		reqCh <- &TaskInfo{ReqCh: inCh, UnCompress: readBuffer}
 	}
 	wg.Done()
 }
-

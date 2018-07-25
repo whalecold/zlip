@@ -1,8 +1,8 @@
 package lz77
 
 import (
-	"algorithm/stack"
 	"algorithm/huffman"
+	"algorithm/stack"
 )
 
 func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
@@ -13,7 +13,7 @@ func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
 	}
 	if temp[0] == RLC_Zero && len(temp) >= RLC_Length {
 		tempLen := len(temp)
-		for ; tempLen > huffman.HUFFMAN_CCLLen; {
+		for tempLen > huffman.HUFFMAN_CCLLen {
 			*r = append(*r, RLC_Special)
 			*r = append(*r, huffman.HUFFMAN_CCLLen)
 			tempLen -= huffman.HUFFMAN_CCLLen

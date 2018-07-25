@@ -1,14 +1,14 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
-	"net"
 	"fmt"
 	"mydata/utils"
-	"strings"
-	"encoding/binary"
-	"sort"
+	"net"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -20,27 +20,25 @@ var BufferChan chan []byte
 var LastCheckSum = 0x0
 var FillNum = byte(0xAB)
 
-
-
-
 type RecvData struct {
-	Seq int32
+	Seq      int32
 	CheckSum uint32
-	Data []byte
+	Data     []byte
 }
 
-type RecvDataSlice  []RecvData
-func (r RecvDataSlice)Len() int {
+type RecvDataSlice []RecvData
+
+func (r RecvDataSlice) Len() int {
 	return len(r)
 }
 
-func (r RecvDataSlice)Swap(i, j int) {
+func (r RecvDataSlice) Swap(i, j int) {
 	//r[i].Seq, r[j].Seq = r[j].Seq, r[i].Seq
 	//r[i].Data, r[j].Data = r[j].Data, r[i].Data
 	r[i], r[j] = r[j], r[i]
 }
 
-func (r RecvDataSlice)Less(i, j int) bool {
+func (r RecvDataSlice) Less(i, j int) bool {
 	return r[i].Seq < r[j].Seq
 }
 
@@ -48,6 +46,7 @@ var SeqSlice []int
 var ErrorSlice []int
 var DataInfoSlice RecvDataSlice
 var SumErrorNum int
+
 func PrepareLogin(conn net.Conn) error {
 	temp := make([]byte, 1024)
 	readLen, err := conn.Read(temp)
@@ -64,7 +63,6 @@ func PrepareLogin(conn net.Conn) error {
 	if len(strSlice) < 2 {
 		return errors.New("error Handshake!")
 	}
-
 
 	verifyInfo := fmt.Sprintf("IAM:%s:zls1129@gmail.com\n", strSlice[1])
 	//fmt.Printf("%s\n", verifyInfo)
@@ -94,23 +92,23 @@ func UnpackDataChunk(chunk []byte) bool {
 	checksum := binary.BigEndian.Uint32(chunk[4:8])
 	//serinum := chunk[4:8]
 	length := binary.BigEndian.Uint32(chunk[8:12])
-	data := chunk[12:length+12]
+	data := chunk[12 : length+12]
 	//fmt.Printf("sequence : %v | checksum : %v | length : %v | data : %v \n", sequence, checksum, length, data)
 	//fmt.Printf("checksum : %v  \n", serinum)
 
 	lastSum := sequence
 	dataNumer = dataNumer + length
-	for index := 0; index * 4 < len(data); index++ {
+	for index := 0; index*4 < len(data); index++ {
 		temp := make([]byte, 4)
 		dataLen := len(data)
-		if index * 4 + 4 > dataLen {
-			temp1 := data[index * 4:dataLen]
+		if index*4+4 > dataLen {
+			temp1 := data[index*4 : dataLen]
 			utils.DeepCopy(&temp, &temp1)
 			for i := len(temp); i < 4; i++ {
 				temp = append(temp, FillNum)
 			}
 		} else {
-			temp1 := data[index * 4:index * 4 + 4]
+			temp1 := data[index*4 : index*4+4]
 			utils.DeepCopy(&temp, &temp1)
 		}
 		lastSum ^= binary.BigEndian.Uint32(temp)
@@ -139,7 +137,7 @@ func UnpackDataChunk(chunk []byte) bool {
 
 func main() {
 
-	RecvBuffer = make([]byte, 1024 * 128)
+	RecvBuffer = make([]byte, 1024*128)
 	BufferChan = make(chan []byte)
 	DataInfoSlice = make(RecvDataSlice, 0, 10240)
 	SeqSlice = make([]int, 0, 1024)
@@ -161,7 +159,7 @@ func main() {
 func GetDataFromTcp() {
 	var wg sync.WaitGroup
 
-	conn, err := net.Dial("tcp", "challenge.yuansuan.cn:7042" )
+	conn, err := net.Dial("tcp", "challenge.yuansuan.cn:7042")
 	if err != nil {
 		fmt.Printf("connect failed !\n")
 		return
@@ -199,7 +197,7 @@ func GetDataFromTcp() {
 			fmt.Printf("data right : %v \n", DataNum)
 		}
 		wg.Done()
-	} ()
+	}()
 	wg.Wait()
 }
 
@@ -217,7 +215,7 @@ func WritePicFile() {
 	//var checkSum uint32
 	//var tempVar []byte
 	var lostLen int
-	seqMap := make(map[int32] interface{})
+	seqMap := make(map[int32]interface{})
 	var MaxSumNumber int
 	for _, value := range DataInfoSlice {
 

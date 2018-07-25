@@ -6,22 +6,21 @@ import (
 	"encoding/binary"
 )
 
-
 func genHashNumber(bytes []byte) uint16 {
 	var hash uint32
-	hash = uint32(bytes[0]) << 16 + uint32(bytes[1]) << 8 + uint32(bytes[2])
+	hash = uint32(bytes[0])<<16 + uint32(bytes[1])<<8 + uint32(bytes[2])
 	//fmt.Printf("%v\n", uint16(hash & LZ77_WindowsMask))
 	return uint16(hash & LZ77_WindowsMask)
 }
 
 //查看最长匹配串 这个函数都是数组操作 不知道为什么会这么耗cpu~~
-func checkLargestCmpBytes(bytes []byte, curIndex , cmpIndex, maxSize uint64) uint64 {
+func checkLargestCmpBytes(bytes []byte, curIndex, cmpIndex, maxSize uint64) uint64 {
 	//fmt.Printf("cur Index %v cmpIndex %v\n", curIndex, cmpIndex)
 	var length uint64
 	temp := curIndex
 	for {
 		if curIndex >= maxSize || bytes[curIndex] != bytes[cmpIndex] ||
-			cmpIndex >= temp || length >= LZ77_MaxCmpLength - 1 {
+			cmpIndex >= temp || length >= LZ77_MaxCmpLength-1 {
 			break
 		}
 		curIndex++
@@ -40,14 +39,14 @@ func updateHashIndex(prev, head []uint64, hash uint16, index uint64) {
 	temp := head[hash]
 	head[hash] = index
 	if temp != 0 {
-		prev[index & LZ77_WindowsMask] = temp
+		prev[index&LZ77_WindowsMask] = temp
 	}
 }
 
 //更新bytes数组的前三位hash值
 func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 	//这里是更新接下来的匹配
-	hash := genHashNumber(bytes[index-LZ77_MinCmpSize:index])
+	hash := genHashNumber(bytes[index-LZ77_MinCmpSize : index])
 	updateHashIndex(prev, head, hash, index-LZ77_MinCmpSize)
 
 	return hash
@@ -59,7 +58,7 @@ func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 //映射参考 doc里面的两张图
 //([]byte, map[uint16]int, map[byte]int)
 func Lz77Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
-	if len(bytes) < LZ77_MinCmpSize * 2 {
+	if len(bytes) < LZ77_MinCmpSize*2 {
 		panic("func cmp bytes need large than 3")
 	}
 
@@ -90,13 +89,11 @@ func Lz77Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
 	binary.BigEndian.PutUint16(sq1BitsLen, uint16(len(sq1Bits)))
 	binary.BigEndian.PutUint16(sq2BitsLen, uint16(len(sq2Bits)))
 
-
 	//lastResult = append(lastResult, headInfoLen...)
 	//lastResult = append(lastResult, []byte(LZ77_HeadInfo)...)
 	*outBuffer = append(*outBuffer, huffman3Len...)
 	*outBuffer = append(*outBuffer, sq1BitsLen...)
 	*outBuffer = append(*outBuffer, sq2BitsLen...)
-
 
 	*outBuffer = append(*outBuffer, huffman3...)
 	*outBuffer = append(*outBuffer, sq1Bits...)
@@ -123,17 +120,17 @@ func UnLz77Compress(bytes []byte) []byte {
 	//offset += uint64(headLen)
 	//fmt.Printf("UnLz77Compress  %v \n", len(bytes))
 
-	huffman3Len := binary.BigEndian.Uint16(bytes[offset:offset+2])
+	huffman3Len := binary.BigEndian.Uint16(bytes[offset : offset+2])
 	offset += 2
-	sq1BitsLen := binary.BigEndian.Uint16(bytes[offset:offset+2])
+	sq1BitsLen := binary.BigEndian.Uint16(bytes[offset : offset+2])
 	offset += 2
-	sq2BitsLen := binary.BigEndian.Uint16(bytes[offset:offset+2])
+	sq2BitsLen := binary.BigEndian.Uint16(bytes[offset : offset+2])
 	offset += 2
-	huffmanCode := bytes[offset:offset+uint64(huffman3Len)]
+	huffmanCode := bytes[offset : offset+uint64(huffman3Len)]
 	offset += uint64(huffman3Len)
-	sq1Bits := bytes[offset:offset+uint64(sq1BitsLen)]
+	sq1Bits := bytes[offset : offset+uint64(sq1BitsLen)]
 	offset += uint64(sq1BitsLen)
-	sq2Bits := bytes[offset:offset+uint64(sq2BitsLen)]
+	sq2Bits := bytes[offset : offset+uint64(sq2BitsLen)]
 	offset += uint64(sq2BitsLen)
 
 	//fmt.Printf("sq1Bits %v sq2Bits %v huffmanCode %v\n", len(sq1Bits), len(sq2Bits), len(huffmanCode))
@@ -160,7 +157,7 @@ func UnLz77Compress(bytes []byte) []byte {
 	var resubyteoffset uint32
 	var bitoffset uint32
 	for {
-		getData, r, b, l:= cl2.DecodeEle(buffer[resubyteoffset:], bitoffset)
+		getData, r, b, l := cl2.DecodeEle(buffer[resubyteoffset:], bitoffset)
 		resubyteoffset += r
 		bitoffset = b
 		//fmt.Printf("dara %v, %v\n", getData, l)

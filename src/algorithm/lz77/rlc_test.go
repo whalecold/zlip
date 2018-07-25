@@ -1,8 +1,8 @@
 package lz77
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestRLC(t *testing.T) {

@@ -1,19 +1,19 @@
 package main
 
 import (
-	"flag"
-	"os"
-	"io"
 	"algorithm/lz77"
-	"sync"
-	"sort"
-	"runtime"
+	"flag"
 	"fmt"
+	"io"
+	"os"
+	"runtime"
+	"sort"
+	"sync"
 	"time"
 	//"log"
 	//"runtime/pprof"
-	_ "net/http/pprof"
 	"net/http"
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -38,7 +38,6 @@ func main() {
 	destFile := flag.String("dest", "", "dest file")
 	flag.Parse()
 
-
 	ch := make(chan *Subsection, cpuNum)
 
 	wg := &sync.WaitGroup{}
@@ -57,7 +56,6 @@ func main() {
 		chPool[i] = make(chan *TaskInfo)
 	}
 
-
 	var index int64
 	if *decode == false {
 		fileSize, err := sFile.Seek(0, io.SeekEnd)
@@ -66,23 +64,23 @@ func main() {
 		}
 		sFile.Seek(0, io.SeekStart)
 		index = fileSize / lz77.LZ77_ChunkSize
-		if fileSize % lz77.LZ77_ChunkSize != 0 {
+		if fileSize%lz77.LZ77_ChunkSize != 0 {
 			index++
 		}
 		wg.Add(1)
 		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.LZ77_ChunkSize)
-		for i := 0; i < cpuNum; i ++ {
+		for i := 0; i < cpuNum; i++ {
 			wg.Add(1)
-			go compressTask(sFile, wg , ch , chPool[i], reqChan, lz77.LZ77_ChunkSize, fileLock)
+			go compressTask(sFile, wg, ch, chPool[i], reqChan, lz77.LZ77_ChunkSize, fileLock)
 		}
 
 	} else {
 		wg.Add(1)
 		go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
 
-		for i := 0; i < cpuNum; i ++ {
+		for i := 0; i < cpuNum; i++ {
 			wg.Add(1)
-			go unCompressTask(wg , ch , chPool[i], reqChan)
+			go unCompressTask(wg, ch, chPool[i], reqChan)
 		}
 
 	}
@@ -106,7 +104,7 @@ func main() {
 				lastWriteSequeue++
 				needRemove = append(needRemove, i)
 				if index != 0 {
-					fmt.Printf("complete %.2f... \n", float64(lastWriteSequeue)/float64(index) * 100)
+					fmt.Printf("complete %.2f... \n", float64(lastWriteSequeue)/float64(index)*100)
 				}
 
 				//fmt.Printf("complete %v... size %v\n",  value.Sequence, len(value.Content))
@@ -124,11 +122,10 @@ func main() {
 			}
 		}
 	}
-	WriteEnd:
-		time2 := time.Now().UnixNano()
-		ms := (time2 - time1) / 1e6
-		fmt.Printf("cost time %vms \n", ms)
-
+WriteEnd:
+	time2 := time.Now().UnixNano()
+	ms := (time2 - time1) / 1e6
+	fmt.Printf("cost time %vms \n", ms)
 
 	wg.Wait()
 	memStats := new(runtime.MemStats)

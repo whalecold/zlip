@@ -6,16 +6,16 @@ import (
 )
 
 type HuffmanNode struct {
-	Power 	int32 	//权重 叶子节点相当于出现次数
-	Value 	uint16
-	LeftTree *HuffmanNode
+	Power     int32 //权重 叶子节点相当于出现次数
+	Value     uint16
+	LeftTree  *HuffmanNode
 	RightTree *HuffmanNode
-	Leaf	bool 		//表示是否是叶子节点
+	Leaf      bool //表示是否是叶子节点
 }
 
 type HuffmanNodeSlice []*HuffmanNode
 
-func (h HuffmanNodeSlice)Less(i, j int) bool {
+func (h HuffmanNodeSlice) Less(i, j int) bool {
 	if h[i].Power != h[j].Power {
 		return h[i].Power < h[j].Power
 	} else {
@@ -23,11 +23,11 @@ func (h HuffmanNodeSlice)Less(i, j int) bool {
 	}
 }
 
-func (h HuffmanNodeSlice)Swap(i, j int) {
+func (h HuffmanNodeSlice) Swap(i, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h HuffmanNodeSlice)Len() int {
+func (h HuffmanNodeSlice) Len() int {
 	return len(h)
 }
 
@@ -35,9 +35,8 @@ func (h HuffmanNodeSlice)Len() int {
 type HuffmanCodeMap map[byte][]byte
 type DeflateCodeMap map[uint16][]byte
 
-
 //return 匹配到的byte | 移动的bit位数 | bytes偏移位数 | bit偏移位数(范围0-7)
-func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
+func (huff *HuffmanNode) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
 
 	tempNode := huff
 	var bitLen uint32
@@ -58,7 +57,7 @@ func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (b
 				panic("decodeByteFromHuffman error bit")
 			}
 			if tempNode.Leaf == true {
-				return byte(tempNode.Value), bitLen, byteLen, bitOffset+1
+				return byte(tempNode.Value), bitLen, byteLen, bitOffset + 1
 			}
 		}
 		//备注 :这里bitOffset 需要清0 之前落了导致bug
@@ -71,7 +70,7 @@ func (huff *HuffmanNode)decodeByteFromHuffman(bytes []byte, bitOffset uint32) (b
 
 //上面那个是之前测试用的
 //return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7)
-func (huff *HuffmanNode)decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uint32, uint32) {
+func (huff *HuffmanNode) decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uint32, uint32) {
 
 	tempNode := huff
 	var byteLen uint32
@@ -87,7 +86,7 @@ func (huff *HuffmanNode)decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint1
 				panic("decodeByteFromHuffman error bit")
 			}
 			if tempNode.Leaf == true {
-				return tempNode.Value, byteLen, bitOffset+1
+				return tempNode.Value, byteLen, bitOffset + 1
 			}
 		}
 		//备注 :这里bitOffset 需要清0 之前落了导致bug
@@ -100,7 +99,7 @@ func (huff *HuffmanNode)decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint1
 
 //在树的节点没有重复的情况下 树的前序遍历数组和中序遍历数组能建立唯一的树
 //所以这里产生两个数组 用来以后建立树
-func (huff *HuffmanNode)genStreamByPreorder() []byte {
+func (huff *HuffmanNode) genStreamByPreorder() []byte {
 	//每个叶子节点都需要有值 而且必须每个都不一样
 	// uint16高八位 1表示非叶子节点 第八位表示序号  高八位0表示叶子节点 低八位表示实际序号
 	preorderSlice := make([]byte, 0, 512)
@@ -128,7 +127,7 @@ func (huff *HuffmanNode)genStreamByPreorder() []byte {
 }
 
 //获取中序遍历数据
-func (huff *HuffmanNode)genStreamByInorder() []byte {
+func (huff *HuffmanNode) genStreamByInorder() []byte {
 	inorderSlice := make([]byte, 0, 512)
 
 	s := stack.NewStack()
@@ -157,10 +156,10 @@ func (huff *HuffmanNode)genStreamByInorder() []byte {
 }
 
 //待优化这种序列化方式占用的空间有点高 这只是自己想的存储码表的方式 实际不采用这种方式
-func (huff *HuffmanNode)serializeTree() []byte {
+func (huff *HuffmanNode) serializeTree() []byte {
 	pre := huff.genStreamByPreorder()
 	in := huff.genStreamByInorder()
-	serialize := make([]byte, 0, len(pre) + len(in))
+	serialize := make([]byte, 0, len(pre)+len(in))
 	serialize = append(serialize, pre...)
 	serialize = append(serialize, in...)
 	//fmt.Printf("pre : %v  in %v\n", pre, in)
@@ -174,6 +173,7 @@ func buildTreeBySlice(pre, in []byte) *HuffmanNode {
 
 	return buildTreeByOrder(preShort, inShort)
 }
+
 //反序列化
 func buildTreeBySerialize(serial []byte, size uint32) *HuffmanNode {
 	preShort := transUint16Byte(serial[:size/2])
@@ -226,24 +226,23 @@ func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
 
 //因为是两个字节表示一个数
 func transUint16Byte(bytes []byte) []uint16 {
-	if len(bytes) % 2 == 1 {
+	if len(bytes)%2 == 1 {
 		panic("buildTreeBySlice param error!")
 	}
 
-	uslice := make([]uint16, 0, len(bytes) / 2)
+	uslice := make([]uint16, 0, len(bytes)/2)
 
-	for i:=0; i < len(bytes); i+=2 {
-		value := uint16(bytes[i]) << 8 + uint16(bytes[i+1])
+	for i := 0; i < len(bytes); i += 2 {
+		value := uint16(bytes[i])<<8 + uint16(bytes[i+1])
 		//fmt.Printf("high %b low %b value : %v\n", bytes[i], bytes[1+i], value)
 		uslice = append(uslice, value)
 	}
 	return uslice
 }
 
-
 //调用这个函数会破坏树的结构 后序遍历
 //https://blog.csdn.net/gatieme/article/details/51163010
-func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
+func (huff *HuffmanNode) transTreeToHuffmanCodeMap() HuffmanCodeMap {
 	if huff == nil {
 		return nil
 	}
@@ -276,7 +275,7 @@ func (huff *HuffmanNode)transTreeToHuffmanCodeMap() HuffmanCodeMap {
 }
 
 //调用这个函数会破坏树的结构
-func (huff *HuffmanNode)transTreeToDeflateCodeMap(length int) [][]byte {
+func (huff *HuffmanNode) transTreeToDeflateCodeMap(length int) [][]byte {
 	if huff == nil {
 		return nil
 	}
@@ -308,6 +307,6 @@ func (huff *HuffmanNode)transTreeToDeflateCodeMap(length int) [][]byte {
 	return result
 }
 
-func (huff *HuffmanNode)Printf() {
+func (huff *HuffmanNode) Printf() {
 
 }

@@ -1,10 +1,9 @@
 package huffman
 
 import (
-	"fmt"
 	"encoding/binary"
+	"fmt"
 )
-
 
 func decodeTest(bytes []byte) []byte {
 	root := buildHuffmanTree(bytes)
@@ -20,14 +19,14 @@ func decodeTest(bytes []byte) []byte {
 	pre := headTest.genStreamByPreorder()
 	in := headTest.genStreamByInorder()
 
-	for _, value := range in{
+	for _, value := range in {
 		fmt.Printf("%v\t", value)
 	}
 	fmt.Printf("\n")
 
 	result := buildTreeBySlice(pre, in)
 	pre111 := result.genStreamByInorder()
-	for _, value := range pre111{
+	for _, value := range pre111 {
 		fmt.Printf("%v\t", value)
 	}
 	fmt.Printf("\n")
@@ -48,14 +47,13 @@ func Decode(bytes []byte) []byte {
 
 	//fmt.Printf("treeLen %v\n", treeLen)
 
-	root := buildTreeBySerialize(bytes[offset:offset + treeLen], treeLen)
+	root := buildTreeBySerialize(bytes[offset:offset+treeLen], treeLen)
 	root.serializeTree()
 	offset += treeLen
-	bitLen := binary.BigEndian.Uint32(bytes[offset:offset+4])
+	bitLen := binary.BigEndian.Uint32(bytes[offset : offset+4])
 	offset += 4
 
-	result := make([]byte, 0, len(bytes) - int(offset))
-
+	result := make([]byte, 0, len(bytes)-int(offset))
 
 	var tempLen uint32
 	var bitOffset uint32

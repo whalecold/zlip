@@ -1,6 +1,5 @@
 package utils
 
-
 //备注：这里面的判断都可以不加 最好是在debuf版本加 release版本不加
 //优化压缩耗时
 //bit 范围 0-31 0表示最低位 从最低位开始读
@@ -9,7 +8,7 @@ func ReadBitLow(num uint32, bit uint) byte {
 	//	panic("readBit error")
 	//}
 	temp := uint32(1 << bit)
-	if num & temp == 0{
+	if num&temp == 0 {
 		return 0
 	} else {
 		return 1
@@ -48,9 +47,9 @@ func WriteBitsHigh(b *byte, offset uint32, n byte) byte {
 	//	panic("WriteBitsHigh error n")
 	//}
 
-	i := n << uint32(7 - offset)
+	i := n << uint32(7-offset)
 	if n == 1 {
-		*b |=  i
+		*b |= i
 	} else {
 		*b &= ^i
 	}
@@ -67,10 +66,10 @@ func WriteBitsHigh16(b *uint16, offset uint32, n uint16) uint16 {
 	//}
 
 	if n == 1 {
-		i := n << uint32(15 - offset)
+		i := n << uint32(15-offset)
 		*b = *b | i
 	} else {
-		i := uint16(1 << uint32(15 - offset))
+		i := uint16(1 << uint32(15-offset))
 		*b = *b & (^i)
 	}
 	return *b
@@ -101,5 +100,6 @@ func ReadBitsLen(bytes []byte, bitOffset uint32, readLen uint16) (uint16, uint32
 	//走到这个肯定是程序出错了 找不到对应字符串是不能发生的
 	panic("ReadBitsLen failed !")
 }
+
 //hotfix test
 //branchTest
