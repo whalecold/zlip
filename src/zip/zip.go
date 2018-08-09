@@ -76,7 +76,7 @@ func main() {
 
 	} else {
 		wg.Add(1)
-		go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
+			go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
 
 		for i := 0; i < cpuNum; i++ {
 			wg.Add(1)
