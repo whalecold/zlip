@@ -1,5 +1,5 @@
-*.exe
-pkg/*
+_output/*
 bin/*
 .idea/*
 data/*
+.DS_Store/*

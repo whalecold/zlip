@@ -1,6 +1,25 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [],
-	"rootPath": "compress"
+	"package": [
+		{
+			"checksumSHA1": "HmbftipkadrLlCfzzVQ+iFHbl6g=",
+			"path": "github.com/golang/glog",
+			"revision": "23def4e6c14b4da8ac2ed8007337bc5eb5007998",
+			"revisionTime": "2016-01-25T20:49:56Z"
+		},
+		{
+			"checksumSHA1": "YMGD3aMJlxhrWBzLlTqPhTLyxG4=",
+			"path": "github.com/spf13/cobra",
+			"revision": "99dc123558852f67743bd0b2caf8383cb3c6d720",
+			"revisionTime": "2018-08-29T16:07:45Z"
+		},
+		{
+			"checksumSHA1": "Lz5Php4tvbJOB/6FWGlStzhppL0=",
+			"path": "github.com/spf13/pflag",
+			"revision": "9a97c102cda95a86cec2345a6f09f55a939babf5",
+			"revisionTime": "2018-08-08T15:28:24Z"
+		}
+	],
+	"rootPath": "whalecold/compress"
 }
