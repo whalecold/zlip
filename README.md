@@ -1,4 +1,4 @@
-## 基于deflate的压缩算法，参考了zip（主要是想尝试下自己写个压缩工具）
+## 基于deflate的压缩算法，参考了zip（主要是想尝试下自己写个压缩工具） ![Travis (.org)](https://img.shields.io/travis/whalecold/compress/master.svg)
 
 ## 参考文章
 > - [ZIP压缩算法详细分析及解压实例解释](https://www.cnblogs.com/esingchan/p/3958962.html)
@@ -90,3 +90,9 @@
 所以不需要很大的数组，也不会造成空间浪费。在压缩1.4g电影文件的时候 能节约20s左右的时间
 
 #### 分块压缩块的大小(LZ77_ChunkSize)对压缩效率有一定的影响 需要取一个适当的值 目前取得是5M 没有进行很深的研究 
+
+####TODO
+- [ ]  完善测试用例
+- [ ]  支持现在的zip
+- [ ]  支持压缩文件夹
+- [ ]  完善ci
