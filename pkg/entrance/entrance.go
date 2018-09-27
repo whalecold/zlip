@@ -1,8 +1,6 @@
 package entrance
 
 import (
-	_ "net/http/pprof"
-
 	"flag"
 	"fmt"
 	"io"
@@ -16,6 +14,7 @@ import (
 	"github.com/whalecold/compress/pkg/lz77"
 )
 
+// Entrance entrance
 func Entrance(source, target string, decode bool) {
 	go http.ListenAndServe("0.0.0.0:8000", nil)
 	cpuNum := runtime.NumCPU()
@@ -59,20 +58,20 @@ func Entrance(source, target string, decode bool) {
 			panic(err.Error())
 		}
 		sFile.Seek(0, io.SeekStart)
-		index = fileSize / lz77.LZ77_ChunkSize
-		if fileSize%lz77.LZ77_ChunkSize != 0 {
+		index = fileSize / lz77.LZ77ChunkSize
+		if fileSize%lz77.LZ77ChunkSize != 0 {
 			index++
 		}
 		wg.Add(1)
-		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.LZ77_ChunkSize)
+		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.LZ77ChunkSize)
 		for i := 0; i < cpuNum; i++ {
 			wg.Add(1)
-			go compressTask(sFile, wg, ch, chPool[i], reqChan, lz77.LZ77_ChunkSize, fileLock)
+			go compressTask(sFile, wg, ch, chPool[i], reqChan, lz77.LZ77ChunkSize, fileLock)
 		}
 
 	} else {
 		wg.Add(1)
-			go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
+		go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
 
 		for i := 0; i < cpuNum; i++ {
 			wg.Add(1)

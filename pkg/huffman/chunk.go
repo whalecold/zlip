@@ -5,38 +5,41 @@ import (
 	"github.com/whalecold/compress/pkg/utils"
 )
 
-type HuffmanNode struct {
+// Node huffmannode
+type Node struct {
 	Power     int32 //权重 叶子节点相当于出现次数
 	Value     uint16
-	LeftTree  *HuffmanNode
-	RightTree *HuffmanNode
+	LeftTree  *Node
+	RightTree *Node
 	Leaf      bool //表示是否是叶子节点
 }
 
-type HuffmanNodeSlice []*HuffmanNode
+//NodeSlice slice
+type NodeSlice []*Node
 
-func (h HuffmanNodeSlice) Less(i, j int) bool {
+func (h NodeSlice) Less(i, j int) bool {
 	if h[i].Power != h[j].Power {
 		return h[i].Power < h[j].Power
-	} else {
-		return h[i].Value < h[j].Value
 	}
+	return h[i].Value < h[j].Value
 }
 
-func (h HuffmanNodeSlice) Swap(i, j int) {
+func (h NodeSlice) Swap(i, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h HuffmanNodeSlice) Len() int {
+func (h NodeSlice) Len() int {
 	return len(h)
 }
 
-//huffman编码表
-type HuffmanCodeMap map[byte][]byte
+//CodeMap map
+type CodeMap map[byte][]byte
+
+//DeflateCodeMap deflatecodemap
 type DeflateCodeMap map[uint16][]byte
 
 //return 匹配到的byte | 移动的bit位数 | bytes偏移位数 | bit偏移位数(范围0-7)
-func (huff *HuffmanNode) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
+func (huff *Node) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {
 
 	tempNode := huff
 	var bitLen uint32
@@ -70,7 +73,7 @@ func (huff *HuffmanNode) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (
 
 //上面那个是之前测试用的
 //return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7)
-func (huff *HuffmanNode) decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uint32, uint32) {
+func (huff *Node) decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uint32, uint32) {
 
 	tempNode := huff
 	var byteLen uint32
@@ -99,14 +102,14 @@ func (huff *HuffmanNode) decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint
 
 //在树的节点没有重复的情况下 树的前序遍历数组和中序遍历数组能建立唯一的树
 //所以这里产生两个数组 用来以后建立树
-func (huff *HuffmanNode) genStreamByPreorder() []byte {
+func (huff *Node) genStreamByPreorder() []byte {
 	//每个叶子节点都需要有值 而且必须每个都不一样
 	// uint16高八位 1表示非叶子节点 第八位表示序号  高八位0表示叶子节点 低八位表示实际序号
 	preorderSlice := make([]byte, 0, 512)
-	stack_node := stack.NewStack()
-	stack_node.Push(huff)
-	for stack_node.Len() != 0 {
-		node := stack_node.RPop().(*HuffmanNode)
+	stackNode := stack.NewStack()
+	stackNode.Push(huff)
+	for stackNode.Len() != 0 {
+		node := stackNode.RPop().(*Node)
 		if node.Leaf == true {
 			preorderSlice = append(preorderSlice, 0)
 		} else {
@@ -115,11 +118,11 @@ func (huff *HuffmanNode) genStreamByPreorder() []byte {
 		preorderSlice = append(preorderSlice, byte(node.Value))
 
 		if node.RightTree != nil {
-			stack_node.Push(node.RightTree)
+			stackNode.Push(node.RightTree)
 		}
 
 		if node.LeftTree != nil {
-			stack_node.Push(node.LeftTree)
+			stackNode.Push(node.LeftTree)
 		}
 	}
 	//fmt.Printf("--- %v\n", preorderSlice)
@@ -127,7 +130,7 @@ func (huff *HuffmanNode) genStreamByPreorder() []byte {
 }
 
 //获取中序遍历数据
-func (huff *HuffmanNode) genStreamByInorder() []byte {
+func (huff *Node) genStreamByInorder() []byte {
 	inorderSlice := make([]byte, 0, 512)
 
 	s := stack.NewStack()
@@ -140,7 +143,7 @@ func (huff *HuffmanNode) genStreamByInorder() []byte {
 		}
 
 		if s.Len() != 0 {
-			node = s.RPop().(*HuffmanNode)
+			node = s.RPop().(*Node)
 
 			if node.Leaf == true {
 				inorderSlice = append(inorderSlice, 0)
@@ -156,7 +159,7 @@ func (huff *HuffmanNode) genStreamByInorder() []byte {
 }
 
 //待优化这种序列化方式占用的空间有点高 这只是自己想的存储码表的方式 实际不采用这种方式
-func (huff *HuffmanNode) serializeTree() []byte {
+func (huff *Node) serializeTree() []byte {
 	pre := huff.genStreamByPreorder()
 	in := huff.genStreamByInorder()
 	serialize := make([]byte, 0, len(pre)+len(in))
@@ -167,7 +170,7 @@ func (huff *HuffmanNode) serializeTree() []byte {
 }
 
 //根据上面获得的两个数组来建立一个数
-func buildTreeBySlice(pre, in []byte) *HuffmanNode {
+func buildTreeBySlice(pre, in []byte) *Node {
 	preShort := transUint16Byte(pre)
 	inShort := transUint16Byte(in)
 
@@ -175,7 +178,7 @@ func buildTreeBySlice(pre, in []byte) *HuffmanNode {
 }
 
 //反序列化
-func buildTreeBySerialize(serial []byte, size uint32) *HuffmanNode {
+func buildTreeBySerialize(serial []byte, size uint32) *Node {
 	preShort := transUint16Byte(serial[:size/2])
 	inShort := transUint16Byte(serial[size/2:])
 
@@ -183,7 +186,7 @@ func buildTreeBySerialize(serial []byte, size uint32) *HuffmanNode {
 }
 
 //根据前序遍历和中序遍历建立一个新的树
-func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
+func buildTreeByOrder(pre, in []uint16) *Node {
 	if 0 == len(pre) || 0 == len(in) {
 		return nil
 	}
@@ -191,7 +194,7 @@ func buildTreeByOrder(pre, in []uint16) *HuffmanNode {
 	midNumber := pre[0]
 	midIndex := 0
 
-	root := &HuffmanNode{
+	root := &Node{
 		Value: uint16(midNumber & 0xFF),
 	}
 
@@ -242,17 +245,17 @@ func transUint16Byte(bytes []byte) []uint16 {
 
 //调用这个函数会破坏树的结构 后序遍历
 //https://blog.csdn.net/gatieme/article/details/51163010
-func (huff *HuffmanNode) transTreeToHuffmanCodeMap() HuffmanCodeMap {
+func (huff *Node) transTreeToHuffmanCodeMap() CodeMap {
 	if huff == nil {
 		return nil
 	}
-	m := make(HuffmanCodeMap)
+	m := make(CodeMap)
 	s := stack.NewStack()
 	s.Push(huff)
 
 	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
-		tree := s.Pop().(*HuffmanNode)
+		tree := s.Pop().(*Node)
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
 			tree.LeftTree = nil
@@ -275,7 +278,7 @@ func (huff *HuffmanNode) transTreeToHuffmanCodeMap() HuffmanCodeMap {
 }
 
 //调用这个函数会破坏树的结构
-func (huff *HuffmanNode) transTreeToDeflateCodeMap(length int) [][]byte {
+func (huff *Node) transTreeToDeflateCodeMap(length int) [][]byte {
 	if huff == nil {
 		return nil
 	}
@@ -285,7 +288,7 @@ func (huff *HuffmanNode) transTreeToDeflateCodeMap(length int) [][]byte {
 
 	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
-		tree := s.Pop().(*HuffmanNode)
+		tree := s.Pop().(*Node)
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
 			tree.LeftTree = nil
@@ -307,6 +310,7 @@ func (huff *HuffmanNode) transTreeToDeflateCodeMap(length int) [][]byte {
 	return result
 }
 
-func (huff *HuffmanNode) Printf() {
+// Printf printf
+func (huff *Node) Printf() {
 
 }

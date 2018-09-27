@@ -6,21 +6,21 @@ import (
 )
 
 func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
-	temp := make([]byte, 0, RLC_MaxLength)
+	temp := make([]byte, 0, RLCMaxLength)
 	for node := stackNode.RPop(); node != nil; {
 		temp = append(temp, node.(byte))
 		node = stackNode.RPop()
 	}
-	if temp[0] == RLC_Zero && len(temp) >= RLC_Length {
+	if temp[0] == RLCZero && len(temp) >= RLCLength {
 		tempLen := len(temp)
-		for tempLen > huffman.HUFFMAN_CCLLen {
-			*r = append(*r, RLC_Special)
-			*r = append(*r, huffman.HUFFMAN_CCLLen)
-			tempLen -= huffman.HUFFMAN_CCLLen
+		for tempLen > huffman.HUFFMANCCLLen {
+			*r = append(*r, RLCSpecial)
+			*r = append(*r, huffman.HUFFMANCCLLen)
+			tempLen -= huffman.HUFFMANCCLLen
 		}
 
 		if tempLen != 0 {
-			*r = append(*r, RLC_Special)
+			*r = append(*r, RLCSpecial)
 			*r = append(*r, byte(tempLen))
 		}
 
@@ -31,6 +31,7 @@ func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
 	}
 }
 
+//RLC rlc
 //游程编码
 //run length coding 这里感觉非0的重复不会很多 只对0进行编码
 //简单处理下 17表示0 后面的数字表示0重复的个数 多于3个重复才开始编码
@@ -54,13 +55,14 @@ func RLC(bytes []byte) []byte {
 	return bytes
 }
 
+//UnRLC unrlc
 func UnRLC(bytes []byte) []byte {
-	result := make([]byte, 0, RLC_MaxLength)
+	result := make([]byte, 0, RLCMaxLength)
 	for i := 0; i < len(bytes); i++ {
-		if bytes[i] == RLC_Special {
+		if bytes[i] == RLCSpecial {
 			tempLen := bytes[i+1]
 			for k := byte(0); k < tempLen; k++ {
-				result = append(result, RLC_Zero)
+				result = append(result, RLCZero)
 			}
 			i++
 		} else {

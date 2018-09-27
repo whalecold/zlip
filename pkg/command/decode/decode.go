@@ -41,7 +41,7 @@ func NewDecodeCommand() *cobra.Command {
 	return cmd
 }
 
-func (d *decodeOption)decode(args []string) error {
+func (d *decodeOption) decode(args []string) error {
 	if len(d.target) == 0 || len(d.source) == 0 {
 		return fmt.Errorf("source or target parmer can't be empty")
 	}

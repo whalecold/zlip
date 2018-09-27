@@ -1,10 +1,12 @@
 package entrance
 
+// Subsection task uint
 type Subsection struct {
 	Sequence int64
 	Content  []byte
 }
 
+// SubsectionSlice task slice
 type SubsectionSlice []*Subsection
 
 func (s SubsectionSlice) Less(i, j int) bool {

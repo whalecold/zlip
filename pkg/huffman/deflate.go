@@ -4,6 +4,7 @@ import "fmt"
 
 //deflate 构建distance树
 
+//DistanceZone distance zone data
 //{min max distance, bits, code}
 var DistanceZone = [][]uint16{
 	{1, 1, 0, 0}, {2, 2, 0, 1}, {3, 3, 0, 2}, {4, 4, 0, 3},
@@ -18,6 +19,7 @@ var DistanceZone = [][]uint16{
 	{12289, 16384, 12, 27}, {16385, 24576, 13, 28},
 	{24577, 32768, 13, 29}}
 
+//LengthZone length zone
 //{min max length, bits, code}
 var LengthZone = [][]uint16{
 	{3, 3, 0, 257}, {4, 4, 0, 258}, {5, 5, 0, 259}, {6, 6, 0, 260},
@@ -42,10 +44,13 @@ func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16) {
 		"(check if init)", distance))
 }
 
+//GetZoneByDis get zone by dis
 //{zone, bits lower}
 func GetZoneByDis(distance uint16) (uint16, uint16, uint16) {
 	return getZoneByData(distance, DistanceZone)
 }
+
+//GetZoneByLength get zone
 func GetZoneByLength(distance uint16) (uint16, uint16, uint16) {
 	return getZoneByData(distance, LengthZone)
 }
@@ -60,9 +65,12 @@ func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16) {
 	panic(fmt.Sprintf("getDistanceByZone : error param %v", zone))
 }
 
+//GetDisByData get dis by data
 func GetDisByData(zone uint16) (uint16, uint16) {
 	return getDataByZone(zone, DistanceZone)
 }
+
+//GetLengthByData get length
 func GetLengthByData(zone uint16) (uint16, uint16) {
 	return getDataByZone(zone, LengthZone)
 }
@@ -77,6 +85,7 @@ func getMaxDeepth(bits []byte) int {
 	return int(max)
 }
 
+//CompareTwoBytes comapre
 func CompareTwoBytes(l, m []byte) bool {
 	if len(l) != len(m) {
 		return false
@@ -94,7 +103,6 @@ func checkBytesFull(bytes *[]byte, offset *uint32) bool {
 		*offset = 0
 		*bytes = append(*bytes, byte(0))
 		return true
-	} else {
-		return false
 	}
+	return false
 }

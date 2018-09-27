@@ -7,8 +7,10 @@ import (
 )
 
 var (
+	//VERSION version
 	VERSION = "Not provided."
-	COMMIT  = "Not provided."
+	//COMMIT commit
+	COMMIT = "Not provided."
 )
 
 // PrintInfoAndExit prints versions from the array returned by Info() and exit

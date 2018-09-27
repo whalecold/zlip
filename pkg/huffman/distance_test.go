@@ -178,7 +178,7 @@ func TestDeflateTree3(t *testing.T) {
 }
 
 func TestDistanceGetMaxLen(t *testing.T) {
-	literalAlgorithm := &HuffmanAlg{}
+	literalAlgorithm := &Alg{}
 	literalAlgorithm.InitLiteral()
 	rand.Seed(time.Now().Unix())
 

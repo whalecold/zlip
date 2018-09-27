@@ -38,6 +38,7 @@ func decodeTest(bytes []byte) []byte {
 	return bytes
 }
 
+//Decode decode
 func Decode(bytes []byte) []byte {
 
 	var offset uint32

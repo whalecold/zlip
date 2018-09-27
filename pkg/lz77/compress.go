@@ -8,32 +8,32 @@ import (
 //先进行第一步压缩 生成cl1 cl2 和 压缩后的bits
 func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 
-	result := make([]uint16, 0, LZ77_ChunkSize)
-	prevIndex := make([]uint64, LZ77_CmpPrevSize)
-	headIndex := make([]uint64, LZ77_CmpHeadSize)
+	result := make([]uint16, 0, LZ77ChunkSize)
+	prevIndex := make([]uint64, LZ77CmpPrevSize)
+	headIndex := make([]uint64, LZ77CmpHeadSize)
 
 	//distance
-	cl1 := &huffman.HuffmanAlg{}
+	cl1 := &huffman.Alg{}
 	cl1.InitDis()
 	//literal/length
-	cl2 := &huffman.HuffmanAlg{}
+	cl2 := &huffman.Alg{}
 	cl2.InitLiteral()
 
-	for i := 0; i < LZ77_MinCmpSize; i++ {
+	for i := 0; i < LZ77MinCmpSize; i++ {
 		result = append(result, uint16(bytes[i]))
 		cl2.AddElement(uint16(bytes[i]), false)
 	}
 	//bytes = append(bytes, LZ77_EndFlag)
 
-	cl2.AddElement(huffman.HUFFMAN_EndFlag, false)
+	cl2.AddElement(huffman.HUFFMANEndFlag, false)
 	//小于三个字节
 	var index uint64
-	for index = LZ77_MinCmpSize; index+LZ77_MinCmpSize <= size; {
+	for index = LZ77MinCmpSize; index+LZ77MinCmpSize <= size; {
 
 		//每次移动窗口都要更新值
 		updateHashBytes(bytes, index, prevIndex, headIndex)
 
-		hash := genHashNumber(bytes[index : index+LZ77_MinCmpSize])
+		hash := genHashNumber(bytes[index : index+LZ77MinCmpSize])
 		cmpIndex := headIndex[hash]
 		if cmpIndex == 0 { //没有匹配到
 			result = append(result, uint16(bytes[index]))
@@ -49,25 +49,25 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 
 				length := checkLargestCmpBytes(bytes, index, cmpIndex, size)
 
-				if maxCmpLength < length && index-cmpIndex < LZ77_MaxWindowsSize {
+				if maxCmpLength < length && index-cmpIndex < LZ77MaxWindowsSize {
 					maxCmpLength = length
 					maxCmpStart = cmpIndex
 				}
 
-				cmpIndex = prevIndex[cmpIndex&LZ77_WindowsMask]
+				cmpIndex = prevIndex[cmpIndex&LZ77WindowsMask]
 				if cmpIndex == 0 {
 					break
 				}
 				//fmt.Printf("luup %v %v\n", cmpIndex, prevIndex[cmpIndex & LZ77_WindowsMask])
 				maxCmpNumber++
 				//限制匹配次数 不做判断会造成死循环
-				if maxCmpNumber >= LZ77_MaxCmpNum {
+				if maxCmpNumber >= LZ77MaxCmpNum {
 					break
 				}
 			}
 
 			//还是没有匹配到 或者 匹配到的是hash冲突的字段
-			if maxCmpLength < LZ77_MinCmpSize {
+			if maxCmpLength < LZ77MinCmpSize {
 				result = append(result, uint16(bytes[index]))
 				cl2.AddElement(uint16(bytes[index]), false)
 				index++
@@ -107,7 +107,7 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	var indexCode uint64
 	var bit uint32
 
-	result = append(result, huffman.HUFFMAN_EndFlag)
+	result = append(result, huffman.HUFFMANEndFlag)
 	for i := 0; i < len(result); i++ {
 		//表示长度
 		if utils.ReadBitsHigh16(result[i], 0) == 1 {
@@ -129,7 +129,7 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	return cl1Bits, cl2Bits, huffmanCode
 }
 
-func compressCClSub(cl []byte, huff *huffman.HuffmanAlg) []byte {
+func compressCClSub(cl []byte, huff *huffman.Alg) []byte {
 	var bits uint32
 	var indexCode uint64
 	var bit uint32
@@ -143,7 +143,7 @@ func compressCClSub(cl []byte, huff *huffman.HuffmanAlg) []byte {
 
 //把cl1 cl2 进行第二部压缩 返回ccl 和bits
 func compressCCl(cl1 []byte, cl2 []byte) ([]byte, []byte, []byte) {
-	ccl := &huffman.HuffmanAlg{}
+	ccl := &huffman.Alg{}
 	ccl.InitCCL()
 	for _, value := range cl1 {
 		ccl.AddElement(uint16(value), false)
@@ -151,12 +151,12 @@ func compressCCl(cl1 []byte, cl2 []byte) ([]byte, []byte, []byte) {
 	for _, value := range cl2 {
 		ccl.AddElement(uint16(value), false)
 	}
-	ccl.AddElement(huffman.HUFFMAN_CCLEndFlag, false)
+	ccl.AddElement(huffman.HUFFMANCCLEndFlag, false)
 
 	ccl.BuildHuffmanMap()
 
-	cl1 = append(cl1, huffman.HUFFMAN_CCLEndFlag)
-	cl2 = append(cl2, huffman.HUFFMAN_CCLEndFlag)
+	cl1 = append(cl1, huffman.HUFFMANCCLEndFlag)
+	cl2 = append(cl2, huffman.HUFFMANCCLEndFlag)
 
 	sq1 := compressCClSub(cl1, ccl)
 	sq2 := compressCClSub(cl2, ccl)

@@ -52,6 +52,7 @@ func deepCopy(dst, src reflect.Value) {
 	}
 }
 
+// DeepCopy deep copy
 func DeepCopy(dst, src interface{}) {
 	typeDst := reflect.TypeOf(dst)
 	typeSrc := reflect.TypeOf(src)
@@ -71,12 +72,14 @@ func DeepCopy(dst, src interface{}) {
 	deepCopy(valueDst, valueSrc)
 }
 
+// DeepClone deep clone
 func DeepClone(v interface{}) interface{} {
 	dst := reflect.New(reflect.TypeOf(v)).Elem()
 	deepCopy(dst, reflect.ValueOf(v))
 	return dst.Interface()
 }
 
+// Find return the value equip n
 func Find(n int, f func(int) bool, equip func(int) bool) int {
 	i := sort.Search(n, f)
 	if i == n {

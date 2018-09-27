@@ -4,12 +4,13 @@ import (
 	"sort"
 
 	"container/list"
+
 	"github.com/whalecold/compress/pkg/utils"
 )
 
 //因为码树节点左右分支旋转不会影响压缩程度 所有huffman树有很多表示
 //这里采用最不平衡的树 称之为 Deflate树 在构建的时候效率也会更高 不需要递归
-func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
+func buildTree(huffmanSlice NodeSlice) *Node {
 	//fmt.Printf("tree len : %v\n", len(huffmanSlice))
 	if len(huffmanSlice) == 0 {
 		panic("buildTree param length is zero!")
@@ -17,7 +18,7 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 
 	index := uint16(0)
 	for len(huffmanSlice) != 1 {
-		newNode := &HuffmanNode{
+		newNode := &Node{
 			Power:     huffmanSlice[0].Power + huffmanSlice[1].Power,
 			Value:     index,
 			LeftTree:  huffmanSlice[0],
@@ -36,7 +37,7 @@ func buildTree(huffmanSlice HuffmanNodeSlice) *HuffmanNode {
 }
 
 //把huffman树转成deflate树
-func transDeflateTree(root *HuffmanNode, f func(ele *list.Element, deepth int)) *HuffmanNode {
+func transDeflateTree(root *Node, f func(ele *list.Element, deepth int)) *Node {
 
 	var nextLen int
 	var thisLen int
@@ -52,7 +53,7 @@ func transDeflateTree(root *HuffmanNode, f func(ele *list.Element, deepth int)) 
 			break
 		}
 
-		node := element.Value.(*HuffmanNode)
+		node := element.Value.(*Node)
 		li.PushBack(node)
 		//fmt.Printf("node : %v \n", node.Value)
 
@@ -91,7 +92,7 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 	var leafNodeNum int
 	emptyList := list.New() //存储空节点的队列
 	for temp := ele; temp != nil; temp = temp.Prev() {
-		tempNode := temp.Value.(*HuffmanNode)
+		tempNode := temp.Value.(*Node)
 
 		if tempNode.Leaf == true && tempNode.LeftTree == nil {
 			leafNodeNum++
@@ -102,7 +103,7 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 
 		if tempNode.RightTree != nil && emptyList.Front() != nil {
 			emptyEle = emptyList.Front()
-			emptyNode := emptyEle.Value.(*HuffmanNode)
+			emptyNode := emptyEle.Value.(*Node)
 			emptyNode.RightTree, tempNode.RightTree = tempNode.RightTree, nil
 			emptyNode.LeftTree, tempNode.LeftTree = tempNode.LeftTree, nil
 			emptyNode.Value, tempNode.Value = tempNode.Value, emptyNode.Value
@@ -112,13 +113,13 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 		}
 	}
 
-	nodeSort := make([]*HuffmanNode, 0, leafNodeNum)
+	nodeSort := make([]*Node, 0, leafNodeNum)
 	for temp := ele; temp != nil; temp = temp.Prev() {
-		sortNode := temp.Value.(*HuffmanNode)
+		sortNode := temp.Value.(*Node)
 		//这里是从后往前遍历的 把自己坑了啊
 		if sortNode.Leaf == true && sortNode.LeftTree == nil {
 			//nodeSort = append(nodeSort, sortNode)
-			nodeSort = append([]*HuffmanNode{sortNode}, nodeSort...)
+			nodeSort = append([]*Node{sortNode}, nodeSort...)
 		}
 	}
 
@@ -138,14 +139,14 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 }
 
 //构建huffmans树
-func buildHuffmanTree(bytes []byte) *HuffmanNode {
+func buildHuffmanTree(bytes []byte) *Node {
 	//fmt.Printf("bytes %v\n", bytes)
-	huffmanMap := make(map[byte]*HuffmanNode)
+	huffmanMap := make(map[byte]*Node)
 	for _, value := range bytes {
 		if m, ok := huffmanMap[value]; ok {
 			m.Power++
 		} else {
-			huffmanMap[value] = &HuffmanNode{
+			huffmanMap[value] = &Node{
 				Power:     1,
 				Value:     uint16(value),
 				LeftTree:  nil,
@@ -155,7 +156,7 @@ func buildHuffmanTree(bytes []byte) *HuffmanNode {
 		}
 	}
 
-	huffmanSlice := make(HuffmanNodeSlice, 0, len(huffmanMap))
+	huffmanSlice := make(NodeSlice, 0, len(huffmanMap))
 	for _, v := range huffmanMap {
 		huffmanSlice = append(huffmanSlice, v)
 	}
@@ -256,10 +257,10 @@ func buildCodeMapByBits(bits []byte) [][]byte {
 }
 
 //建立deflate树根据map
-func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
+func buildDeflatTreeByMap(m [][]byte) *Node {
 
-	root := &HuffmanNode{}
-	var temp *HuffmanNode
+	root := &Node{}
+	var temp *Node
 	for k, v := range m {
 		temp = root
 		for index, bit := range v {
@@ -273,7 +274,7 @@ func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
 				if temp.LeftTree != nil {
 					temp = temp.LeftTree
 				} else {
-					newTemp := &HuffmanNode{}
+					newTemp := &Node{}
 					temp.LeftTree = newTemp
 					temp = newTemp
 					if index == len(v)-1 {
@@ -291,7 +292,7 @@ func buildDeflatTreeByMap(m [][]byte) *HuffmanNode {
 				if temp.RightTree != nil {
 					temp = temp.RightTree
 				} else {
-					newTemp := &HuffmanNode{}
+					newTemp := &Node{}
 					temp.RightTree = newTemp
 					temp = newTemp
 					if index == len(v)-1 {

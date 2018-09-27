@@ -10,7 +10,7 @@ func genHashNumber(bytes []byte) uint16 {
 	var hash uint32
 	hash = uint32(bytes[0])<<16 + uint32(bytes[1])<<8 + uint32(bytes[2])
 	//fmt.Printf("%v\n", uint16(hash & LZ77_WindowsMask))
-	return uint16(hash & LZ77_WindowsMask)
+	return uint16(hash & LZ77WindowsMask)
 }
 
 //查看最长匹配串 这个函数都是数组操作 不知道为什么会这么耗cpu~~
@@ -20,7 +20,7 @@ func checkLargestCmpBytes(bytes []byte, curIndex, cmpIndex, maxSize uint64) uint
 	temp := curIndex
 	for {
 		if curIndex >= maxSize || bytes[curIndex] != bytes[cmpIndex] ||
-			cmpIndex >= temp || length >= LZ77_MaxCmpLength-1 {
+			cmpIndex >= temp || length >= LZ77MaxCmpLength-1 {
 			break
 		}
 		curIndex++
@@ -39,26 +39,27 @@ func updateHashIndex(prev, head []uint64, hash uint16, index uint64) {
 	temp := head[hash]
 	head[hash] = index
 	if temp != 0 {
-		prev[index&LZ77_WindowsMask] = temp
+		prev[index&LZ77WindowsMask] = temp
 	}
 }
 
 //更新bytes数组的前三位hash值
 func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 	//这里是更新接下来的匹配
-	hash := genHashNumber(bytes[index-LZ77_MinCmpSize : index])
-	updateHashIndex(prev, head, hash, index-LZ77_MinCmpSize)
+	hash := genHashNumber(bytes[index-LZ77MinCmpSize : index])
+	updateHashIndex(prev, head, hash, index-LZ77MinCmpSize)
 
 	return hash
 }
 
+//Compress nil
 //这个是匹配是算法
 //因为len(bytes)返回的是int 文件大小可能超过 所以长度用新的uint64参数表示
 //第一个返回的map表示literal/length 出现的次数 第二个表示distance出现的次数 会对length和distance做一定的优化
 //映射参考 doc里面的两张图
 //([]byte, map[uint16]int, map[byte]int)
-func Lz77Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
-	if len(bytes) < LZ77_MinCmpSize*2 {
+func Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
+	if len(bytes) < LZ77MinCmpSize*2 {
 		panic("func cmp bytes need large than 3")
 	}
 
@@ -103,11 +104,12 @@ func Lz77Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
 	return *outBuffer, len(*outBuffer)
 }
 
+//UnCompress nil
 /* 压缩格式 单位 byte
 |huffman3Len(2) | sq1BitsLen(2) |
 |sq2BitsLen(2) | huffman3 | sq1Bits | sq2Bits | huffmanCode...|
 */
-func UnLz77Compress(bytes []byte) []byte {
+func UnCompress(bytes []byte) []byte {
 	if len(bytes) < 8 {
 		panic("UnLz77Compress error param len ")
 	}
@@ -140,9 +142,9 @@ func UnLz77Compress(bytes []byte) []byte {
 	sq2Serial = UnRLC(sq2Serial)
 	//fmt.Printf("sq1Serial %v sq2Serial %v\n", len(sq1Serial), len(sq2Serial))
 
-	cl1 := &huffman.HuffmanAlg{}
+	cl1 := &huffman.Alg{}
 	cl1.InitDis()
-	cl2 := &huffman.HuffmanAlg{}
+	cl2 := &huffman.Alg{}
 	cl2.InitLiteral()
 
 	cl2.UnSerializeAndBuild(sq2Serial)
@@ -151,7 +153,7 @@ func UnLz77Compress(bytes []byte) []byte {
 	//fmt.Printf("read %v\n", bytes[offset:offset+uint64(distanceBitsLen)])
 	//disDeflateTree.Print()
 
-	outBuffer := make([]byte, 0, LZ77_ChunkSize)
+	outBuffer := make([]byte, 0, LZ77ChunkSize)
 	buffer := bytes[offset:]
 	//fmt.Printf("lastResult... len %b\n", buffer)
 	var resubyteoffset uint32
@@ -171,7 +173,7 @@ func UnLz77Compress(bytes []byte) []byte {
 			for i := uint64(0); i < length; i++ {
 				outBuffer = append(outBuffer, outBuffer[nowLen-uint64(getData)+i])
 			}
-		} else if getData == huffman.HUFFMAN_EndFlag {
+		} else if getData == huffman.HUFFMANEndFlag {
 			//fmt.Printf("end buffer \n")
 			break
 		} else {

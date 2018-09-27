@@ -1,12 +1,17 @@
 package huffman
 
 const (
-	HUFFMAN_LiteralLimit = 256 //literal 和 length的分界线
-	HUFFMAN_EndFlag      = 256 //结束标志
+	//HUFFMANLiteralLimit nil
+	HUFFMANLiteralLimit = 256 //literal 和 length的分界线
+	//HUFFMANEndFlag nil
+	HUFFMANEndFlag = 256 //结束标志
+	//HUFFMANCCLLen nil
 	//CCL树的长度
 	//zip中会进行剪枝 不会超过15的
-	HUFFMAN_CCLLen     = 32
-	HUFFMAN_CCLEndFlag = HUFFMAN_CCLLen + 1 //结束标志
+	HUFFMANCCLLen = 32
+	//HUFFMANCCLEndFlag nil
+	HUFFMANCCLEndFlag = HUFFMANCCLLen + 1 //结束标志
 
-	HUFFMAN_ElementNum = 2 ^ 16
+	//HUFFMANElementNum nil
+	HUFFMANElementNum = 2 ^ 16
 )

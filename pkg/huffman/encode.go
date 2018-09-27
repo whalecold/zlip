@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 )
 
+//EnCode encode
 func EnCode(bytes []byte) []byte {
 
 	root := buildHuffmanTree(bytes)

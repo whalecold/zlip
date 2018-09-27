@@ -2,4 +2,5 @@ _output/*
 bin/*
 .idea/*
 data/*
-.DS_Store/*
+.DS_Store
+.vscode/*

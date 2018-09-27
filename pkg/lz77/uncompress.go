@@ -4,7 +4,7 @@ import (
 	"github.com/whalecold/compress/pkg/huffman"
 )
 
-func unCompressSQSub(buffer []byte, h *huffman.HuffmanAlg) []byte {
+func unCompressSQSub(buffer []byte, h *huffman.Alg) []byte {
 	lastResult := make([]byte, 0, 1024)
 
 	var byteOffset uint32
@@ -13,7 +13,7 @@ func unCompressSQSub(buffer []byte, h *huffman.HuffmanAlg) []byte {
 		getData, r, b, _ := h.DecodeEle(buffer[byteOffset:], bitOffset)
 		byteOffset += r
 		bitOffset = b
-		if getData == huffman.HUFFMAN_CCLEndFlag {
+		if getData == huffman.HUFFMANCCLEndFlag {
 			break
 		}
 		lastResult = append(lastResult, byte(getData))
@@ -22,7 +22,7 @@ func unCompressSQSub(buffer []byte, h *huffman.HuffmanAlg) []byte {
 }
 
 func unCompressSQ(huffmanCode, sq1, sq2 []byte) ([]byte, []byte) {
-	ccl := &huffman.HuffmanAlg{}
+	ccl := &huffman.Alg{}
 	ccl.InitCCL()
 
 	ccl.UnSerializeAndBuild(huffmanCode)
