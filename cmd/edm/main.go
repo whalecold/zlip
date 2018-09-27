@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"whalecold/compress/pkg/command"
+	"github.com/whalecold/compress/pkg/command"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"

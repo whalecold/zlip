@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	"container/list"
-	"whalecold/compress/pkg/utils"
+	"github.com/whalecold/compress/pkg/utils"
 )
 
 //因为码树节点左右分支旋转不会影响压缩程度 所有huffman树有很多表示

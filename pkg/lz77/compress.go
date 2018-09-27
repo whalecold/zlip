@@ -1,8 +1,8 @@
 package lz77
 
 import (
-	"whalecold/compress/pkg/huffman"
-	"whalecold/compress/pkg/utils"
+	"github.com/whalecold/compress/pkg/huffman"
+	"github.com/whalecold/compress/pkg/utils"
 )
 
 //先进行第一步压缩 生成cl1 cl2 和 压缩后的bits

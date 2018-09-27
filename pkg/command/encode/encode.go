@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"whalecold/compress/pkg/entrance"
+	"github.com/whalecold/compress/pkg/entrance"
 
 	"github.com/spf13/cobra"
 )

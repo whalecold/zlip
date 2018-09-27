@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"whalecold/compress/pkg/lz77"
+	"github.com/whalecold/compress/pkg/lz77"
 )
 
 func Entrance(source, target string, decode bool) {

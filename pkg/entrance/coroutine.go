@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"whalecold/compress/pkg/lz77"
+	"github.com/whalecold/compress/pkg/lz77"
 )
 
 type TaskInfo struct {

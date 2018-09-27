@@ -1,8 +1,8 @@
 package huffman
 
 import (
-	"whalecold/compress/pkg/stack"
-	"whalecold/compress/pkg/utils"
+	"github.com/whalecold/compress/pkg/stack"
+	"github.com/whalecold/compress/pkg/utils"
 )
 
 type HuffmanNode struct {

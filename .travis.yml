@@ -5,11 +5,5 @@ git:
 branches:
   only:
     - master
-install:
-    - sudo apt install -y tree
 script:
-    - pwd
-    - ls /home/travis/gopath/src/whalecold/compress/pkg/command
-    - echo $GOPATH
-    - tree pkg
     - make build

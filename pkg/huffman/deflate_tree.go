@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"whalecold/compress/pkg/utils"
+	"github.com/whalecold/compress/pkg/utils"
 )
 
 type DelateBitsStreamInfo struct {
