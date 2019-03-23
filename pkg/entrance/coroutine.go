@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/whalecold/compress/pkg/lz77"
+	"github.com/whalecold/zlip/pkg/lz77"
 )
 
 // TaskInfo coroutine taskinfo

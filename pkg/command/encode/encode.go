@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/whalecold/compress/pkg/entrance"
-
 	"github.com/spf13/cobra"
+
+	"github.com/whalecold/zlip/pkg/entrance"
 )
 
 const (

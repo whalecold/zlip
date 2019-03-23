@@ -1,8 +1,8 @@
 package lz77
 
 import (
-	"github.com/whalecold/compress/pkg/huffman"
-	"github.com/whalecold/compress/pkg/stack"
+	"github.com/whalecold/zlip/pkg/huffman"
+	"github.com/whalecold/zlip/pkg/stack"
 )
 
 func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {

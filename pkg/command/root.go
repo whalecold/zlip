@@ -3,9 +3,9 @@ package command
 import (
 	"io"
 
-	"github.com/whalecold/compress/pkg/command/decode"
-	"github.com/whalecold/compress/pkg/command/encode"
-	"github.com/whalecold/compress/pkg/version"
+	"github.com/whalecold/zlip/pkg/command/decode"
+	"github.com/whalecold/zlip/pkg/command/encode"
+	"github.com/whalecold/zlip/pkg/version"
 
 	"github.com/spf13/cobra"
 )

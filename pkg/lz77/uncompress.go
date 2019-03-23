@@ -1,7 +1,7 @@
 package lz77
 
 import (
-	"github.com/whalecold/compress/pkg/huffman"
+	"github.com/whalecold/zlip/pkg/huffman"
 )
 
 func unCompressSQSub(buffer []byte, h *huffman.Alg) []byte {

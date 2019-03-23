@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/whalecold/compress/pkg/utils"
+	"github.com/whalecold/zlip/pkg/utils"
 )
 
 //DelateBitsStreamInfo nil

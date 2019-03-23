@@ -1,8 +1,8 @@
 package huffman
 
 import (
-	"github.com/whalecold/compress/pkg/stack"
-	"github.com/whalecold/compress/pkg/utils"
+	"github.com/whalecold/zlip/pkg/stack"
+	"github.com/whalecold/zlip/pkg/utils"
 )
 
 // Node huffmannode

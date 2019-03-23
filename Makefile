@@ -1,7 +1,6 @@
 
 COMPILER=go
-GOBIN=compress
-TARGET=edm
+TARGET=zlip
 OUT_DIR=bin
 MAIN_DIR=cmd
 

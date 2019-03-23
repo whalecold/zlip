@@ -3,7 +3,7 @@ package lz77
 import (
 	"encoding/binary"
 
-	"github.com/whalecold/compress/pkg/huffman"
+	"github.com/whalecold/zlip/pkg/huffman"
 )
 
 func genHashNumber(bytes []byte) uint16 {

@@ -1,4 +1,4 @@
-## 基于deflate的压缩算法，参考了zip（主要是想尝试下自己写个压缩工具） [![travis-ci.org](https://img.shields.io/travis/whalecold/compress/master.svg)](https://travis-ci.org/whalecold/compress)
+## 基于deflate的压缩算法，参考了zip（主要是想尝试下自己写个压缩工具） [![travis-ci.org](https://img.shields.io/travis/whalecold/zlip/master.svg)](https://travis-ci.org/whalecold/compress)
 
 ## 参考文章
 > - [ZIP压缩算法详细分析及解压实例解释](https://www.cnblogs.com/esingchan/p/3958962.html)
