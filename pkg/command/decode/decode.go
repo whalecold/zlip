@@ -12,7 +12,7 @@ import (
 const (
 	decodeExample = `
 # 压缩文件
-edm decode --source file --target file
+zlip decode --source file --target file
 `
 )
 

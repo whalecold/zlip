@@ -12,7 +12,7 @@ import (
 const (
 	encodeExample = `
 # 解压文件
-edm decode --source file --target file
+zlip decode --source file --target file
 `
 )
 
@@ -46,6 +46,6 @@ func (d *decodeOption) encode(args []string) error {
 		return fmt.Errorf("source or target parmer can't be empty")
 	}
 
-	entrance.Entrance(d.source, d.target, true)
+	entrance.Entrance(d.source, d.target, false)
 	return nil
 }
