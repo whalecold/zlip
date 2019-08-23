@@ -2,10 +2,10 @@ package huffman
 
 import "fmt"
 
-//deflate 构建distance树
+// deflate 构建distance树
 
-//DistanceZone distance zone data
-//{min max distance, bits, code}
+// DistanceZone distance zone data
+// {min max distance, bits, code}
 var DistanceZone = [][]uint16{
 	{1, 1, 0, 0}, {2, 2, 0, 1}, {3, 3, 0, 2}, {4, 4, 0, 3},
 	{5, 6, 1, 4}, {7, 8, 1, 5},
@@ -19,8 +19,8 @@ var DistanceZone = [][]uint16{
 	{12289, 16384, 12, 27}, {16385, 24576, 13, 28},
 	{24577, 32768, 13, 29}}
 
-//LengthZone length zone
-//{min max length, bits, code}
+// LengthZone length zone
+// {min max length, bits, code}
 var LengthZone = [][]uint16{
 	{3, 3, 0, 257}, {4, 4, 0, 258}, {5, 5, 0, 259}, {6, 6, 0, 260},
 	{7, 7, 0, 261}, {8, 8, 0, 262},
@@ -33,7 +33,7 @@ var LengthZone = [][]uint16{
 	{163, 194, 5, 282}, {195, 226, 5, 283},
 	{227, 257, 5, 284}, {258, 258, 0, 285}}
 
-//{zone, bits lower}
+// getZoneByData {zone, bits lower}
 func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16) {
 	for _, value := range data {
 		if distance <= uint16(value[1]) {
@@ -44,18 +44,18 @@ func getZoneByData(distance uint16, data [][]uint16) (uint16, uint16, uint16) {
 		"(check if init)", distance))
 }
 
-//GetZoneByDis get zone by dis
-//{zone, bits lower}
+// GetZoneByDis get zone by dis
+// {zone, bits lower}
 func GetZoneByDis(distance uint16) (uint16, uint16, uint16) {
 	return getZoneByData(distance, DistanceZone)
 }
 
-//GetZoneByLength get zone
+// GetZoneByLength get zone
 func GetZoneByLength(distance uint16) (uint16, uint16, uint16) {
 	return getZoneByData(distance, LengthZone)
 }
 
-//返回 bits扩展位置 最小值
+// getDataByZone 返回 bits扩展位置 最小值
 func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16) {
 	for _, value := range data {
 		if value[3] == zone {
@@ -65,12 +65,12 @@ func getDataByZone(zone uint16, data [][]uint16) (uint16, uint16) {
 	panic(fmt.Sprintf("getDistanceByZone : error param %v", zone))
 }
 
-//GetDisByData get dis by data
+// GetDisByData get dis by data
 func GetDisByData(zone uint16) (uint16, uint16) {
 	return getDataByZone(zone, DistanceZone)
 }
 
-//GetLengthByData get length
+// GetLengthByData get length
 func GetLengthByData(zone uint16) (uint16, uint16) {
 	return getDataByZone(zone, LengthZone)
 }
@@ -85,7 +85,7 @@ func getMaxDeepth(bits []byte) int {
 	return int(max)
 }
 
-//CompareTwoBytes comapre
+// CompareTwoBytes comapre
 func CompareTwoBytes(l, m []byte) bool {
 	if len(l) != len(m) {
 		return false

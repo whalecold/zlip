@@ -81,7 +81,7 @@ func Entrance(source, target string, decode bool) {
 	}
 
 	recv := make(SubsectionSlice, 0, index)
-	dFile, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE, 0666)
+	dFile, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err.Error())
 	}

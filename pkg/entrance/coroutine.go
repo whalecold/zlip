@@ -2,7 +2,6 @@ package entrance
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -20,29 +19,29 @@ type TaskInfo struct {
 	ReadLen    int64
 }
 
-func compressCor(sFile *os.File, wg *sync.WaitGroup, ch chan<- *Subsection, offset, index, readSize int64, lock *sync.RWMutex) {
+// func compressCor(sFile *os.File, wg *sync.WaitGroup, ch chan<- *Subsection, offset, index, readSize int64, lock *sync.RWMutex) {
 
-	buffer := make([]byte, readSize)
-	chunk := &Subsection{Sequence: index}
-	//syscall.Flock(int(sFile.Fd()), syscall.LOCK_SH)		这里的文件锁不知道为什么不能用了
-	lock.Lock()
-	sFile.Seek(offset, io.SeekStart)
-	fmt.Printf("read len %v   \n", len(buffer))
-	if _, err := sFile.Read(buffer); err != nil {
-		panic(err.Error())
-	}
-	lock.Unlock()
+// 	buffer := make([]byte, readSize)
+// 	chunk := &Subsection{Sequence: index}
+// 	//syscall.Flock(int(sFile.Fd()), syscall.LOCK_SH)		这里的文件锁不知道为什么不能用了
+// 	lock.Lock()
+// 	sFile.Seek(offset, io.SeekStart)
+// 	fmt.Printf("read len %v   \n", len(buffer))
+// 	if _, err := sFile.Read(buffer); err != nil {
+// 		panic(err.Error())
+// 	}
+// 	lock.Unlock()
 
-	outBuffer := make([]byte, 0, 1024*1024)
-	chunk.Content, _ = lz77.Compress(buffer, &outBuffer, uint64(readSize))
-	lenInfo := make([]byte, 4)
-	binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
+// 	outBuffer := make([]byte, 0, 1024*1024)
+// 	chunk.Content, _ = lz77.Compress(buffer, &outBuffer, uint64(readSize))
+// 	lenInfo := make([]byte, 4)
+// 	binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
 
-	chunk.Content = append(lenInfo, chunk.Content...)
+// 	chunk.Content = append(lenInfo, chunk.Content...)
 
-	ch <- chunk
-	wg.Done()
-}
+// 	ch <- chunk
+// 	wg.Done()
+// }
 
 //任务池中的一个子任务
 func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan *TaskInfo, readSize int64, lock *sync.RWMutex) {

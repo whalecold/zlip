@@ -256,9 +256,8 @@ func buildCodeMapByBits(bits []byte) [][]byte {
 	return m
 }
 
-//建立deflate树根据map
+// buildDeflatTreeByMap generator a deflate tree by map
 func buildDeflatTreeByMap(m [][]byte) *Node {
-
 	root := &Node{}
 	var temp *Node
 	for k, v := range m {
