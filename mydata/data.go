@@ -4,12 +4,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"mydata/utils"
 	"net"
 	"os"
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/whalecold/zlip/mydata/utils"
 )
 
 //http://challenge.yuansuan.cn/

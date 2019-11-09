@@ -75,7 +75,7 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 				tempLength := uint16(maxCmpLength)
 				cl2.AddElement(tempLength, true)
 				//fmt.Printf("pre length %v------\n", tempLength)
-				utils.WriteBitsHigh16(&tempLength, 0, 1)
+				utils.SetHighBit16(&tempLength, 0, 1)
 				//fmt.Printf("----------------------pre length %v\n", uint16(index-maxCmpStart))
 				result = append(result, tempLength)
 				result = append(result, uint16(index-maxCmpStart))
@@ -110,8 +110,8 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	result = append(result, huffman.HUFFMANEndFlag)
 	for i := 0; i < len(result); i++ {
 		//表示长度
-		if utils.ReadBitsHigh16(result[i], 0) == 1 {
-			utils.WriteBitsHigh16(&result[i], 0, 0)
+		if utils.GetHighBit16(result[i], 0) == 1 {
+			utils.SetHighBit16(&result[i], 0, 0)
 			//fmt.Printf("new ----- %v\n", temp)
 			bit = cl2.EnCodeElement(result[i], &huffmanCode, bits, &indexCode, true)
 			bits = bit

@@ -2,7 +2,6 @@ package decode
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/whalecold/zlip/pkg/entrance"
 
@@ -21,8 +20,8 @@ type decodeOption struct {
 	target string
 }
 
-// NewDecodeCommand return decode command
-func NewDecodeCommand() *cobra.Command {
+// New return decode command
+func New() *cobra.Command {
 	opts := decodeOption{}
 	cmd := &cobra.Command{
 		Use:     "decode",
@@ -31,8 +30,7 @@ func NewDecodeCommand() *cobra.Command {
 		Example: decodeExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := opts.decode(args); err != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				os.Exit(1)
+				panic(err)
 			}
 		},
 	}

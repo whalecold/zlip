@@ -49,7 +49,7 @@ func (huff *Node) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, u
 		for ; bitOffset < 8; bitOffset++ {
 			bitLen++
 			//fmt.Printf("%b\t", value)
-			bit := utils.ReadBitsHigh(value, bitOffset)
+			bit := utils.GetHighBit8(value, bitOffset)
 			//fmt.Printf("------------------------------------%b\n", bit)
 
 			if bit == 0 {
@@ -79,7 +79,7 @@ func (huff *Node) decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uin
 	var byteLen uint32
 	for _, value := range bytes {
 		for ; bitOffset < 8; bitOffset++ {
-			bit := utils.ReadBitsHigh(value, bitOffset)
+			bit := utils.GetHighBit8(value, bitOffset)
 
 			if bit == 0 {
 				tempNode = tempNode.LeftTree

@@ -61,8 +61,7 @@ func (h *Alg) UnSerializeAndBuild(bits []byte) {
 }
 
 //DecodeEle nil
-func (h *Alg) DecodeEle(bytes []byte,
-	offset uint32) (uint16, uint32, uint32, bool) {
+func (h *Alg) DecodeEle(bytes []byte, offset uint32) (uint16, uint32, uint32, bool) {
 	return h.tree.DecodeEle(bytes, offset)
 }
 

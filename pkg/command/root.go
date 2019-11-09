@@ -10,24 +10,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCompressAdmin returns compress command
-func NewCompressAdmin(_ io.Reader, out, err io.Writer) *cobra.Command {
-	cmds := &cobra.Command{
+// New returns compress command
+func New(_ io.Reader, _, _ io.Writer) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "edm",
 		Short: "encode or decode the file.",
 		Long:  "encode or decode the file.",
 	}
 
-	cmds.AddCommand(decode.NewDecodeCommand())
-	cmds.AddCommand(encode.NewEncodeCommand())
-	cmds.AddCommand(NewVersionCommand())
+	cmd.AddCommand(decode.New())
+	cmd.AddCommand(encode.New())
+	cmd.AddCommand(NewVersionCommand())
 
-	return cmds
+	return cmd
 }
 
 // NewVersionCommand returns version command
 func NewVersionCommand() *cobra.Command {
-	cmds := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Get version.",
 		Long:  "Get version.",
@@ -36,5 +36,5 @@ func NewVersionCommand() *cobra.Command {
 		},
 	}
 
-	return cmds
+	return cmd
 }

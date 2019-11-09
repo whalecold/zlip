@@ -2,7 +2,6 @@ package encode
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -21,8 +20,8 @@ type decodeOption struct {
 	target string
 }
 
-// NewEncodeCommand return decode command
-func NewEncodeCommand() *cobra.Command {
+// New return decode command
+func New() *cobra.Command {
 	opts := decodeOption{}
 	cmd := &cobra.Command{
 		Use:     "encode",
@@ -31,8 +30,7 @@ func NewEncodeCommand() *cobra.Command {
 		Example: encodeExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := opts.encode(args); err != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				os.Exit(1)
+				panic(err)
 			}
 		},
 	}

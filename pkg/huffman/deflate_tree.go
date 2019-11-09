@@ -140,7 +140,7 @@ func (deflate *DeflateTree) EnCodeElement(ele uint16,
 	//	panic(fmt.Sprintf("EnCodeElement error para %v", zone))
 	//}
 	for _, value := range zoneBits {
-		utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, value)
+		utils.SetHighBit8(&(*bytes)[*dataSet], offset, value)
 		offset++
 		if checkBytesFull(bytes, &offset) {
 			*dataSet++
@@ -150,8 +150,8 @@ func (deflate *DeflateTree) EnCodeElement(ele uint16,
 	if bitLen != 0 {
 		sur := ele % lower
 		for i := 16 - bitLen; i < 16; i++ {
-			v := utils.ReadBitsHigh16(sur, uint32(i))
-			utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, v)
+			v := utils.GetHighBit16(sur, uint32(i))
+			utils.SetHighBit8(&(*bytes)[*dataSet], offset, v)
 			offset++
 			if checkBytesFull(bytes, &offset) {
 				*dataSet++
@@ -161,10 +161,10 @@ func (deflate *DeflateTree) EnCodeElement(ele uint16,
 	return offset
 }
 
-//DecodeEle encode ele
-//传入参数 bytes bits流 offset第一个字节之后的偏移位置
-//return 第1个返回实际距离 第2个参数表示返回字节偏移  第二个参数表示bits偏移
-//return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7) | bool表示是否是长度 true 是
+// DecodeEle encode ele
+// 传入参数 bytes bits流 offset第一个字节之后的偏移位置
+// return 第1个返回实际距离 第2个参数表示返回字节偏移  第二个参数表示bits偏移
+// return 匹配到的区间码  | bytes偏移位数 | bit偏移位数(范围0-7) | bool表示是否是长度 true 是
 func (deflate *DeflateTree) DecodeEle(bytes []byte,
 	offset uint32) (uint16, uint32, uint32, bool) {
 	code, off, bits := deflate.node.decodeCodeDeflate(bytes, offset)
@@ -177,8 +177,8 @@ func (deflate *DeflateTree) DecodeEle(bytes []byte,
 	return dis, off + o, bits, flag
 }
 
-//UnSerializeBitsStream unserialize
-//根据位数来重新获得码表映射
+// UnSerializeBitsStream unserialize
+// 根据位数来重新获得码表映射
 func (deflate *DeflateTree) UnSerializeBitsStream(bits []byte) {
 	if len(bits) != deflate.condition.GetBitsLen() {
 		panic(fmt.Sprintf("BuildTreeByBits error length %v shoud be %v", len(bits), deflate.condition.GetBitsLen()))
@@ -186,8 +186,8 @@ func (deflate *DeflateTree) UnSerializeBitsStream(bits []byte) {
 	deflate.huffmanSlice = buildCodeMapByBits(bits)
 }
 
-//BuildTreeByMap build tree
-//根据码表map建立deflate树
+// BuildTreeByMap build tree
+// 根据码表map建立deflate树
 func (deflate *DeflateTree) BuildTreeByMap() {
 	deflate.node = buildDeflatTreeByMap(deflate.huffmanSlice)
 }

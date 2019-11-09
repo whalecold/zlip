@@ -245,7 +245,7 @@ func buildCodeMapByBits(bits []byte) [][]byte {
 		for i := 0; i < len(streamTemp[huffmanLen]); i++ {
 			bytes := make([]byte, huffmanLen)
 			for t := 0; t < huffmanLen; t++ {
-				bytes[huffmanLen-1-t] = utils.ReadBitLow(tempCode, uint(t))
+				bytes[huffmanLen-1-t] = utils.GetLowBit32(tempCode, uint(t))
 			}
 			m[streamTemp[huffmanLen][i]] = bytes
 			tempCode++
