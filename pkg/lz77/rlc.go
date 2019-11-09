@@ -7,9 +7,9 @@ import (
 
 func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
 	temp := make([]byte, 0, RLCMaxLength)
-	for node := stackNode.RPop(); node != nil; {
+	for node := stackNode.Pop(); node != nil; {
 		temp = append(temp, node.(byte))
-		node = stackNode.RPop()
+		node = stackNode.Pop()
 	}
 	if temp[0] == RLCZero && len(temp) >= RLCLength {
 		tempLen := len(temp)
@@ -40,7 +40,7 @@ func RLC(bytes []byte) []byte {
 	stackNode.Push(bytes[0])
 
 	for i := 1; i < len(bytes); i++ {
-		lastNode := stackNode.Pop()
+		lastNode := stackNode.Back()
 		if lastNode != nil {
 			lastData := lastNode.(byte)
 			if lastData != bytes[i] {

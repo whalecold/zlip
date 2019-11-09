@@ -109,7 +109,7 @@ func (huff *Node) genStreamByPreorder() []byte {
 	stackNode := stack.NewStack()
 	stackNode.Push(huff)
 	for stackNode.Len() != 0 {
-		node := stackNode.RPop().(*Node)
+		node := stackNode.Pop().(*Node)
 		if node.Leaf {
 			preorderSlice = append(preorderSlice, 0)
 		} else {
@@ -143,7 +143,7 @@ func (huff *Node) genStreamByInorder() []byte {
 		}
 
 		if s.Len() != 0 {
-			node = s.RPop().(*Node)
+			node = s.Pop().(*Node)
 
 			if node.Leaf {
 				inorderSlice = append(inorderSlice, 0)
@@ -255,7 +255,7 @@ func (huff *Node) transTreeToHuffmanCodeMap() CodeMap {
 
 	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
-		tree := s.Pop().(*Node)
+		tree := s.Back().(*Node)
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
 			tree.LeftTree = nil
@@ -265,7 +265,7 @@ func (huff *Node) transTreeToHuffmanCodeMap() CodeMap {
 			tree.RightTree = nil
 			huffmanCode = append(huffmanCode, 1)
 		} else {
-			s.RPop()
+			s.Pop()
 			if tree.Leaf {
 				m[byte(tree.Value)] = *utils.DeepClone(&huffmanCode).(*[]byte)
 			}
@@ -288,7 +288,7 @@ func (huff *Node) transTreeToDeflateCodeMap(length int) [][]byte {
 
 	huffmanCode := make([]byte, 0, 64)
 	for s.Len() != 0 {
-		tree := s.Pop().(*Node)
+		tree := s.Back().(*Node)
 		if tree.LeftTree != nil {
 			s.Push(tree.LeftTree)
 			tree.LeftTree = nil
@@ -298,7 +298,7 @@ func (huff *Node) transTreeToDeflateCodeMap(length int) [][]byte {
 			tree.RightTree = nil
 			huffmanCode = append(huffmanCode, 1)
 		} else {
-			s.RPop()
+			s.Pop()
 			if tree.Leaf {
 				result[tree.Value] = *utils.DeepClone(&huffmanCode).(*[]byte)
 			}

@@ -3,50 +3,40 @@ package stack
 import "container/list"
 
 type Stack struct {
-	list *list.List
+	l *list.List
 }
 
 func NewStack() *Stack {
-	list := list.New()
-	return &Stack{list}
+	l := list.New()
+	return &Stack{l}
 }
 
-func (stack *Stack) Push(value interface{}) {
-	stack.list.PushBack(value)
+func (s *Stack) Push(value interface{}) {
+	s.l.PushBack(value)
 }
 
-//remove and pop
-func (stack *Stack) RPop() interface{} {
-	e := stack.list.Back()
+// Pop removes the last element and return
+func (s *Stack) Pop() interface{} {
+	e := s.l.Back()
 	if e != nil {
-		stack.list.Remove(e)
+		s.l.Remove(e)
 		return e.Value
 	}
 	return nil
 }
 
-func (stack *Stack) Pop() interface{} {
-	e := stack.list.Back()
+func (s *Stack) Back() interface{} {
+	e := s.l.Back()
 	if e != nil {
-		//stack.list.Remove(e)
 		return e.Value
 	}
 	return nil
 }
 
-func (stack *Stack) Peak() interface{} {
-	e := stack.list.Back()
-	if e != nil {
-		return e.Value
-	}
-
-	return nil
+func (s *Stack) Len() int {
+	return s.l.Len()
 }
 
-func (stack *Stack) Len() int {
-	return stack.list.Len()
-}
-
-func (stack *Stack) Empty() bool {
-	return stack.list.Len() == 0
+func (s *Stack) Empty() bool {
+	return s.l.Len() == 0
 }
