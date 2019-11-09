@@ -4,3 +4,4 @@ bin/*
 data/*
 .DS_Store
 .vscode/*
+coverage.out
