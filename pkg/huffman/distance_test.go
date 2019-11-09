@@ -9,8 +9,8 @@ import (
 )
 
 func TestDeflateTree2(t *testing.T) {
-	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
-	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
+	// dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
+	// dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
 	dis := []uint16{67, 2231, 222, 1212, 991, 4, 4, 4, 4, 5, 6, 5, 35, 99, 99, 99, 33, 31, 90}
 	tree := &DeflateTree{condition: &Distance{extraCode: DistanceZone}}
 	tree.Init()
@@ -20,8 +20,8 @@ func TestDeflateTree2(t *testing.T) {
 	tree.BuildTree()
 	tree.BuildMap()
 	tree.SerializeBitsStream()
-	//tree.Print()
-	//fmt.Printf("tree : %v\n", tree.bits)
+	// tree.Print()
+	// fmt.Printf("tree : %v\n", tree.bits)
 
 	newTree := &DeflateTree{condition: &Distance{extraCode: DistanceZone}}
 	newTree.Init()
@@ -32,25 +32,25 @@ func TestDeflateTree2(t *testing.T) {
 	newTree2 := DeflateTree{condition: &Distance{extraCode: DistanceZone}}
 	newTree2.Init()
 	newTree2.UnSerializeBitsStream(tree.bits)
-	//newTree2.Print()
-	//newTree.Print()
+	// newTree2.Print()
+	// newTree.Print()
 
-	if false == newTree.Equal(tree) {
-		t.Error("过程不对")
+	if !newTree.Equal(tree) {
+		t.Error("equal failed")
 	}
 
-	if false == newTree2.Equal(newTree) {
-		t.Error("过程不对")
+	if !newTree2.Equal(newTree) {
+		t.Error("equal failed")
 	}
 
 	fmt.Printf("size : %v\n", unsafe.Sizeof(uint16(10)))
 }
 
-//测试树的序列化和反序列化 已经对一个distance的解码与反解码
+// 测试树的序列化和反序列化 已经对一个distance的解码与反解码
 func TestDeflateTreeRandom(t *testing.T) {
-	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
-	//dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
-	//dis := []uint16{67, 2231, 222, 1212, 991, 4, 4, 4, 4, 5, 6, 5, 35, 99, 99, 99, 33, 31, 90}
+	// dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
+	// dis := []uint16{4, 4, 4, 4, 5, 6, 5, 7, 7, 9}
+	// dis := []uint16{67, 2231, 222, 1212, 991, 4, 4, 4, 4, 5, 6, 5, 35, 99, 99, 99, 33, 31, 90}
 	length := 10000
 	dis := make([]uint16, 0, length)
 
@@ -71,30 +71,30 @@ func TestDeflateTreeRandom(t *testing.T) {
 	tree.BuildTree()
 	tree.BuildMap()
 	tree.SerializeBitsStream()
-	//tree.Print()
-	//fmt.Printf("tree : %v\n", tree.bits)
+	// tree.Print()
+	// fmt.Printf("tree : %v\n", tree.bits)
 
 	newTree := &DeflateTree{condition: &Distance{extraCode: DistanceZone}}
 	newTree.Init()
 	newTree.UnSerializeBitsStream(tree.bits)
 	newTree.BuildTreeByMap()
 	newTree.SerializeBitsStream()
-	//newTree.Print()
+	// newTree.Print()
 
 	newTree2 := DeflateTree{condition: &Distance{extraCode: DistanceZone}}
 	newTree2.Init()
 	newTree2.UnSerializeBitsStream(tree.bits)
-	//newTree2.Print()
-	if false == newTree.Equal(tree) {
-		t.Error("过程不对")
+	// newTree2.Print()
+	if !newTree.Equal(tree) {
+		t.Error("not match")
 	}
-	if false == newTree2.Equal(newTree) {
-		t.Error("过程不对")
+	if !newTree2.Equal(newTree) {
+		t.Error("not match")
 	}
 
 	index := rand.Uint32() % uint32(len(dis))
 	testDis := dis[index]
-	//testDis = 3
+	// testDis = 3
 	code := make([]byte, 1, 32)
 
 	var offset uint64
@@ -103,11 +103,11 @@ func TestDeflateTreeRandom(t *testing.T) {
 	getData, _, _, _ := newTree.DecodeEle(code, 0)
 
 	if getData != testDis {
-		t.Error("过程不对")
+		t.Error("data not match")
 	}
 }
 
-//测试一个串的数字解码与反解码
+// 测试一个串的数字解码与反解码
 func TestDeflateTree3(t *testing.T) {
 	length := 10000
 	dis := make([]uint16, 0, length)
@@ -160,18 +160,18 @@ func TestDeflateTree3(t *testing.T) {
 	}
 
 	result := make([]uint16, 0, 32)
-	var resubyteoffset uint32
-	var bitoffset uint32
+	var resultByteOffset uint32
+	var bitOffset uint32
 	for i := 0; i < times; i++ {
-		getData, r, b, _ := newTree.DecodeEle(code[resubyteoffset:], bitoffset)
-		resubyteoffset += r
-		bitoffset = b
+		getData, r, b, _ := newTree.DecodeEle(code[resultByteOffset:], bitOffset)
+		resultByteOffset += r
+		bitOffset = b
 		result = append(result, getData)
 	}
 
 	for index, value := range result {
 		if value != testDis[index] {
-			t.Errorf("编解码错误！！！")
+			t.Errorf("complier error！！！")
 			break
 		}
 	}
@@ -183,8 +183,8 @@ func TestDistanceGetMaxLen(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 
 	for i := 0; i <= 285; i++ {
-		//randomTimes := rand.Uint32() % 200
-		//for j := uint32(0); j < randomTimes; j++ {
+		// randomTimes := rand.Uint32() % 200
+		// for j := uint32(0); j < randomTimes; j++ {
 		for j := 0; j < i*10000; j++ {
 			literalAlgorithm.AddElement(uint16(i), false)
 		}

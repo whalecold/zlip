@@ -171,7 +171,7 @@ func (deflate *DeflateTree) DecodeEle(bytes []byte,
 	//bitsLen, lower := getDataByZone(code, deflate.extraCode)
 	bitsLen, lower, flag := deflate.condition.GetSourceCode(code)
 
-	dis, o, bits := utils.ReadBitsLen(bytes[off:], bits, bitsLen)
+	dis, o, bits := utils.GetUint16FromBytes(bytes[off:], bits, bitsLen)
 	//fmt.Printf("dis %v  lower %v\n", dis, lower)
 	dis += lower
 	return dis, off + o, bits, flag

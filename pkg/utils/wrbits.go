@@ -75,9 +75,9 @@ func SetHighBit16(b *uint16, o uint32, s uint16) uint16 {
 	return *b
 }
 
-// ReadBitsLen reads len bits as uint16 from bytes starts at bf bit offset.
+// GetUint16FromBytes gets len bits as uint16 from bytes starts at bf bit offset.
 // Return the required value、 byte slide length、bit slide length from a new byte
-func ReadBitsLen(bytes []byte, bf uint32, len uint16) (result uint16, bsl uint32, offset uint32) {
+func GetUint16FromBytes(bytes []byte, bf uint32, len uint16) (result uint16, bsl uint32, offset uint32) {
 	offset = bf
 	if len == 0 {
 		return
@@ -94,6 +94,8 @@ func ReadBitsLen(bytes []byte, bf uint32, len uint16) (result uint16, bsl uint32
 			// if the len of all slide meets the length, return
 			if asl >= len {
 				offset += 1
+				bsl += offset / 8
+				offset = offset % 8
 				return
 			}
 		}
