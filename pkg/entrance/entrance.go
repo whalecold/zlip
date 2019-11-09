@@ -16,7 +16,11 @@ import (
 
 // Entrance entrance
 func Entrance(source, target string, decode bool) {
-	go http.ListenAndServe("0.0.0.0:8000", nil)
+	go func() {
+		if err := http.ListenAndServe("0.0.0.0:8000", nil); err != nil {
+			panic(err)
+		}
+	}()
 	cpuNum := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpuNum)
 
@@ -38,7 +42,11 @@ func Entrance(source, target string, decode bool) {
 	wg := &sync.WaitGroup{}
 
 	sFile, err := os.Open(source)
-	defer sFile.Close()
+	defer func() {
+		if err := sFile.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -52,12 +60,14 @@ func Entrance(source, target string, decode bool) {
 	}
 
 	var index int64
-	if decode == false {
+	if !decode {
 		fileSize, err := sFile.Seek(0, io.SeekEnd)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
-		sFile.Seek(0, io.SeekStart)
+		if _, err := sFile.Seek(0, io.SeekStart); err != nil {
+			panic(err)
+		}
 		index = fileSize / lz77.LZ77ChunkSize
 		if fileSize%lz77.LZ77ChunkSize != 0 {
 			index++
@@ -95,7 +105,10 @@ func Entrance(source, target string, decode bool) {
 		needRemove := make([]int, 0, len(recv))
 		for i, value := range recv {
 			if value.Sequence == lastWriteSequeue {
-				dFile.Write(value.Content)
+				_, err := dFile.Write(value.Content)
+				if err != nil {
+					panic(err)
+				}
 				lastWriteSequeue++
 				needRemove = append(needRemove, i)
 				if index != 0 {
@@ -129,5 +142,4 @@ WriteEnd:
 	fmt.Printf("MemStats Alloc %+v\n", memStats.Alloc)
 	fmt.Printf("MemStats HeapAlloc %+v\n", memStats.HeapAlloc)
 	fmt.Printf("MemStats HeapSys %+v\n", memStats.HeapSys)
-	return
 }

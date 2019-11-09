@@ -7,8 +7,7 @@ import (
 )
 
 func genHashNumber(bytes []byte) uint16 {
-	var hash uint32
-	hash = uint32(bytes[0])<<16 + uint32(bytes[1])<<8 + uint32(bytes[2])
+	hash := uint32(bytes[0])<<16 + uint32(bytes[1])<<8 + uint32(bytes[2])
 	//fmt.Printf("%v\n", uint16(hash & LZ77_WindowsMask))
 	return uint16(hash & LZ77WindowsMask)
 }
@@ -163,7 +162,7 @@ func UnCompress(bytes []byte) []byte {
 		resubyteoffset += r
 		bitoffset = b
 		//fmt.Printf("dara %v, %v\n", getData, l)
-		if l == true {
+		if l {
 			length := uint64(getData)
 			getData, r, b, _ = cl1.DecodeEle(buffer[resubyteoffset:], bitoffset)
 			resubyteoffset += r

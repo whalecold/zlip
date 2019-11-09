@@ -94,7 +94,7 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 	for temp := ele; temp != nil; temp = temp.Prev() {
 		tempNode := temp.Value.(*Node)
 
-		if tempNode.Leaf == true && tempNode.LeftTree == nil {
+		if tempNode.Leaf && tempNode.LeftTree == nil {
 			leafNodeNum++
 		}
 		if tempNode.RightTree == nil {
@@ -117,7 +117,7 @@ func moveDeflateTree(ele *list.Element, deepth int) {
 	for temp := ele; temp != nil; temp = temp.Prev() {
 		sortNode := temp.Value.(*Node)
 		//这里是从后往前遍历的 把自己坑了啊
-		if sortNode.Leaf == true && sortNode.LeftTree == nil {
+		if sortNode.Leaf && sortNode.LeftTree == nil {
 			//nodeSort = append(nodeSort, sortNode)
 			nodeSort = append([]*Node{sortNode}, nodeSort...)
 		}
@@ -235,7 +235,7 @@ func buildCodeMapByBits(bits []byte) [][]byte {
 	//记录树深(n-1)的第一个码的值和长度
 	var lastCode, lastLength uint32
 	for huffmanLen := 1; huffmanLen < len(streamTemp); huffmanLen++ {
-		if len(streamTemp[huffmanLen]) == 0 && flag == false {
+		if len(streamTemp[huffmanLen]) == 0 && !flag {
 			continue
 		}
 		//deflate树的最左边的节点始终为0
@@ -267,7 +267,7 @@ func buildDeflatTreeByMap(m [][]byte) *Node {
 				if temp.LeftTree != nil && index == len(v)-1 {
 					panic("buildDeflatTreeByMap error LeftTree")
 				}
-				if temp.LeftTree != nil && index != len(v)-1 && temp.LeftTree.Leaf == true {
+				if temp.LeftTree != nil && index != len(v)-1 && temp.LeftTree.Leaf {
 					panic("buildDeflatTreeByMap error LeftTree 2")
 				}
 				if temp.LeftTree != nil {
@@ -285,7 +285,7 @@ func buildDeflatTreeByMap(m [][]byte) *Node {
 				if temp.RightTree != nil && index == len(v)-1 {
 					panic("buildDeflatTreeByMap error RightTree")
 				}
-				if temp.RightTree != nil && index != len(v)-1 && temp.RightTree.Leaf == true {
+				if temp.RightTree != nil && index != len(v)-1 && temp.RightTree.Leaf {
 					panic("buildDeflatTreeByMap error RightTree 2")
 				}
 				if temp.RightTree != nil {

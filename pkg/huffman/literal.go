@@ -8,7 +8,7 @@ type Literal struct {
 
 //GetZoneData get zone data
 func (l *Literal) GetZoneData(liter uint16, length bool) (uint16, uint16, uint16) {
-	if length == false {
+	if !length {
 		return liter, 0, liter
 	}
 	return getZoneByData(liter, l.extraCode)

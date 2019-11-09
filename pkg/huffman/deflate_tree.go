@@ -142,7 +142,7 @@ func (deflate *DeflateTree) EnCodeElement(ele uint16,
 	for _, value := range zoneBits {
 		utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, value)
 		offset++
-		if checkBytesFull(bytes, &offset) == true {
+		if checkBytesFull(bytes, &offset) {
 			*dataSet++
 		}
 	}
@@ -153,7 +153,7 @@ func (deflate *DeflateTree) EnCodeElement(ele uint16,
 			v := utils.ReadBitsHigh16(sur, uint32(i))
 			utils.WriteBitsHigh(&(*bytes)[*dataSet], offset, v)
 			offset++
-			if checkBytesFull(bytes, &offset) == true {
+			if checkBytesFull(bytes, &offset) {
 				*dataSet++
 			}
 		}

@@ -84,7 +84,7 @@ func Find(n int, f func(int) bool, equip func(int) bool) int {
 	i := sort.Search(n, f)
 	if i == n {
 		return n
-	} else if equip(i) == true {
+	} else if equip(i) {
 		return i
 	} else {
 		return n

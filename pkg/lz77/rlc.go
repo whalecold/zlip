@@ -25,9 +25,7 @@ func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
 		}
 
 	} else {
-		for _, value := range temp {
-			*r = append(*r, value)
-		}
+		*r = append(*r, temp...)
 	}
 }
 

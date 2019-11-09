@@ -60,9 +60,12 @@ func compressTask(sFile *os.File, wg *sync.WaitGroup, ch chan *Subsection, inCh 
 		}
 
 		lock.Lock()
-		sFile.Seek(recv.Offset, io.SeekStart)
+		_, err := sFile.Seek(recv.Offset, io.SeekStart)
+		if err != nil {
+			panic(err)
+		}
 		if _, err := sFile.Read(readBuffer); err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 		lock.Unlock()
 
@@ -117,7 +120,7 @@ func dispatcherUn(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, sFile
 	var index int64
 
 	for req := range dispChan {
-		if fileEnd == true {
+		if fileEnd {
 			endNum++
 			close(req.ReqCh)
 		} else {

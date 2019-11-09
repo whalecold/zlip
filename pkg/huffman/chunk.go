@@ -59,7 +59,7 @@ func (huff *Node) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, u
 			} else {
 				panic("decodeByteFromHuffman error bit")
 			}
-			if tempNode.Leaf == true {
+			if tempNode.Leaf {
 				return byte(tempNode.Value), bitLen, byteLen, bitOffset + 1
 			}
 		}
@@ -88,7 +88,7 @@ func (huff *Node) decodeCodeDeflate(bytes []byte, bitOffset uint32) (uint16, uin
 			} else {
 				panic("decodeByteFromHuffman error bit")
 			}
-			if tempNode.Leaf == true {
+			if tempNode.Leaf {
 				return tempNode.Value, byteLen, bitOffset + 1
 			}
 		}
@@ -110,7 +110,7 @@ func (huff *Node) genStreamByPreorder() []byte {
 	stackNode.Push(huff)
 	for stackNode.Len() != 0 {
 		node := stackNode.RPop().(*Node)
-		if node.Leaf == true {
+		if node.Leaf {
 			preorderSlice = append(preorderSlice, 0)
 		} else {
 			preorderSlice = append(preorderSlice, 1)
@@ -145,7 +145,7 @@ func (huff *Node) genStreamByInorder() []byte {
 		if s.Len() != 0 {
 			node = s.RPop().(*Node)
 
-			if node.Leaf == true {
+			if node.Leaf {
 				inorderSlice = append(inorderSlice, 0)
 			} else {
 				inorderSlice = append(inorderSlice, 1)
@@ -170,12 +170,12 @@ func (huff *Node) serializeTree() []byte {
 }
 
 //根据上面获得的两个数组来建立一个数
-func buildTreeBySlice(pre, in []byte) *Node {
-	preShort := transUint16Byte(pre)
-	inShort := transUint16Byte(in)
-
-	return buildTreeByOrder(preShort, inShort)
-}
+//func buildTreeBySlice(pre, in []byte) *Node {
+//	preShort := transUint16Byte(pre)
+//	inShort := transUint16Byte(in)
+//
+//	return buildTreeByOrder(preShort, inShort)
+//}
 
 //反序列化
 func buildTreeBySerialize(serial []byte, size uint32) *Node {
@@ -266,7 +266,7 @@ func (huff *Node) transTreeToHuffmanCodeMap() CodeMap {
 			huffmanCode = append(huffmanCode, 1)
 		} else {
 			s.RPop()
-			if tree.Leaf == true {
+			if tree.Leaf {
 				m[byte(tree.Value)] = *utils.DeepClone(&huffmanCode).(*[]byte)
 			}
 			if len(huffmanCode) > 0 {
@@ -299,7 +299,7 @@ func (huff *Node) transTreeToDeflateCodeMap(length int) [][]byte {
 			huffmanCode = append(huffmanCode, 1)
 		} else {
 			s.RPop()
-			if tree.Leaf == true {
+			if tree.Leaf {
 				result[tree.Value] = *utils.DeepClone(&huffmanCode).(*[]byte)
 			}
 			if len(huffmanCode) > 0 {
