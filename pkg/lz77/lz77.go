@@ -9,17 +9,17 @@ import (
 func genHashNumber(bytes []byte) uint16 {
 	hash := uint32(bytes[0])<<16 + uint32(bytes[1])<<8 + uint32(bytes[2])
 	//fmt.Printf("%v\n", uint16(hash & LZ77_WindowsMask))
-	return uint16(hash & LZ77WindowsMask)
+	return uint16(hash & WindowsMask)
 }
 
-//查看最长匹配串 这个函数都是数组操作 不知道为什么会这么耗cpu~~
+// 查看最长匹配串 这个函数都是数组操作 不知道为什么会这么耗cpu~~
 func checkLargestCmpBytes(bytes []byte, curIndex, cmpIndex, maxSize uint64) uint64 {
 	//fmt.Printf("cur Index %v cmpIndex %v\n", curIndex, cmpIndex)
 	var length uint64
 	temp := curIndex
 	for {
 		if curIndex >= maxSize || bytes[curIndex] != bytes[cmpIndex] ||
-			cmpIndex >= temp || length >= LZ77MaxCmpLength-1 {
+			cmpIndex >= temp || length >= MaxCmpLength-1 {
 			break
 		}
 		curIndex++
@@ -38,15 +38,15 @@ func updateHashIndex(prev, head []uint64, hash uint16, index uint64) {
 	temp := head[hash]
 	head[hash] = index
 	if temp != 0 {
-		prev[index&LZ77WindowsMask] = temp
+		prev[index&WindowsMask] = temp
 	}
 }
 
 //更新bytes数组的前三位hash值
 func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 	//这里是更新接下来的匹配
-	hash := genHashNumber(bytes[index-LZ77MinCmpSize : index])
-	updateHashIndex(prev, head, hash, index-LZ77MinCmpSize)
+	hash := genHashNumber(bytes[index-MinCmpSize : index])
+	updateHashIndex(prev, head, hash, index-MinCmpSize)
 
 	return hash
 }
@@ -58,7 +58,7 @@ func updateHashBytes(bytes []byte, index uint64, prev, head []uint64) uint16 {
 //映射参考 doc里面的两张图
 //([]byte, map[uint16]int, map[byte]int)
 func Compress(bytes []byte, outBuffer *[]byte, size uint64) ([]byte, int) {
-	if len(bytes) < LZ77MinCmpSize*2 {
+	if len(bytes) < MinCmpSize*2 {
 		panic("func cmp bytes need large than 3")
 	}
 
@@ -152,7 +152,7 @@ func UnCompress(bytes []byte) []byte {
 	//fmt.Printf("read %v\n", bytes[offset:offset+uint64(distanceBitsLen)])
 	//disDeflateTree.Print()
 
-	outBuffer := make([]byte, 0, LZ77ChunkSize)
+	outBuffer := make([]byte, 0, ChunkSize)
 	buffer := bytes[offset:]
 	//fmt.Printf("lastResult... len %b\n", buffer)
 	var resubyteoffset uint32

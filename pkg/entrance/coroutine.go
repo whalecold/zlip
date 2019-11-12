@@ -160,8 +160,8 @@ func dispatcherUn(dispChan chan *TaskInfo, wg *sync.WaitGroup, cupNum int, sFile
 }
 
 func unCompressTask(wg *sync.WaitGroup, ch chan *Subsection, inCh chan *TaskInfo, reqCh chan *TaskInfo) {
-	//unCompressBuffer := make([]byte, lz77.LZ77ChunkSize * 2)
-	readBuffer := make([]byte, lz77.LZ77ChunkSize*2)
+	//unCompressBuffer := make([]byte, lz77.ChunkSize * 2)
+	readBuffer := make([]byte, lz77.ChunkSize*2)
 	reqCh <- &TaskInfo{ReqCh: inCh, UnCompress: readBuffer}
 	for recv := range inCh {
 		chunk := &Subsection{Sequence: recv.Index}

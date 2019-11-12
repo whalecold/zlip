@@ -1,27 +1,27 @@
 package lz77
 
 const (
-	//LZ77MaxWindowsSize nil
-	LZ77MaxWindowsSize = 32 * 1024 //滑动窗口的大小
-	//LZ77CmpHeadSize nil
-	//LZ7_MaxWindowsSize = 32 //滑动窗口的大小
-	LZ77CmpHeadSize = LZ77MaxWindowsSize
-	//LZ77CmpPrevSize nil
-	LZ77CmpPrevSize = LZ77MaxWindowsSize
-	//LZ77WindowsMask nil
-	LZ77WindowsMask = LZ77MaxWindowsSize - 1
-	//LZ77MinCmpSize nil
-	LZ77MinCmpSize = 3
-	//LZ77MaxCmpNum nil
-	LZ77MaxCmpNum = 8 //最大比较次数
-	//LZ77MaxCmpLength nil
-	LZ77MaxCmpLength = 256 //最大比较长度
-	//LZ77EndFlag nil
-	LZ77EndFlag = 256 //結束
-	//LZ77HeadInfo nil
-	LZ77HeadInfo = "zls1129@gmail.com version 1.0.1"
-	//LZ77ChunkSize nil
-	LZ77ChunkSize = 1024 * 1024 * 5
+	// MaxWindowsSize max slide window size
+	MaxWindowsSize = 32 * 1024
+	// CmpHeadSize nil
+	CmpHeadSize = MaxWindowsSize
+	// CmpPrevSize nil
+	CmpPrevSize = MaxWindowsSize
+	// WindowsMask nil
+	WindowsMask = MaxWindowsSize - 1
+	// MinCmpSize nil
+	MinCmpSize = 3
+	// MaxCmpNum nil
+	MaxCmpNum = 8 //最大比较次数
+	// MaxCmpLength max comparison length
+	MaxCmpLength = 256 //最大比较长度
+	// EndFlag indicates the end.
+	EndFlag = 256
+	// HeadInfo head info
+	HeadInfo = "zls1129@gmail.com version 1.0.1"
+	// ChunkSize separates the whole file into several chunks and every chunk's length is ChunkSize.
+	// Avoid the file size is too large to occupy to many memory and we can do parallel processing with several chunks.
+	ChunkSize = 1024 * 1024 * 5
 )
 
 const (

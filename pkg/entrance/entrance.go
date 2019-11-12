@@ -68,15 +68,15 @@ func Entrance(source, target string, decode bool) {
 		if _, err := sFile.Seek(0, io.SeekStart); err != nil {
 			panic(err)
 		}
-		index = fileSize / lz77.LZ77ChunkSize
-		if fileSize%lz77.LZ77ChunkSize != 0 {
+		index = fileSize / lz77.ChunkSize
+		if fileSize%lz77.ChunkSize != 0 {
 			index++
 		}
 		wg.Add(1)
-		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.LZ77ChunkSize)
+		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.ChunkSize)
 		for i := 0; i < cpuNum; i++ {
 			wg.Add(1)
-			go compressTask(sFile, wg, ch, chPool[i], reqChan, lz77.LZ77ChunkSize, fileLock)
+			go compressTask(sFile, wg, ch, chPool[i], reqChan, lz77.ChunkSize, fileLock)
 		}
 
 	} else {

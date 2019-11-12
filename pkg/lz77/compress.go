@@ -5,12 +5,12 @@ import (
 	"github.com/whalecold/zlip/pkg/utils"
 )
 
-//先进行第一步压缩 生成cl1 cl2 和 压缩后的bits
+// 先进行第一步压缩 生成cl1 cl2 和 压缩后的bits
 func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 
-	result := make([]uint16, 0, LZ77ChunkSize)
-	prevIndex := make([]uint64, LZ77CmpPrevSize)
-	headIndex := make([]uint64, LZ77CmpHeadSize)
+	result := make([]uint16, 0, ChunkSize)
+	prevIndex := make([]uint64, CmpPrevSize)
+	headIndex := make([]uint64, CmpHeadSize)
 
 	//distance
 	cl1 := &huffman.Alg{}
@@ -19,7 +19,7 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	cl2 := &huffman.Alg{}
 	cl2.InitLiteral()
 
-	for i := 0; i < LZ77MinCmpSize; i++ {
+	for i := 0; i < MinCmpSize; i++ {
 		result = append(result, uint16(bytes[i]))
 		cl2.AddElement(uint16(bytes[i]), false)
 	}
@@ -28,12 +28,12 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	cl2.AddElement(huffman.HUFFMANEndFlag, false)
 	//小于三个字节
 	var index uint64
-	for index = LZ77MinCmpSize; index+LZ77MinCmpSize <= size; {
+	for index = MinCmpSize; index+MinCmpSize <= size; {
 
 		//每次移动窗口都要更新值
 		updateHashBytes(bytes, index, prevIndex, headIndex)
 
-		hash := genHashNumber(bytes[index : index+LZ77MinCmpSize])
+		hash := genHashNumber(bytes[index : index+MinCmpSize])
 		cmpIndex := headIndex[hash]
 		if cmpIndex == 0 { //没有匹配到
 			result = append(result, uint16(bytes[index]))
@@ -49,25 +49,25 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 
 				length := checkLargestCmpBytes(bytes, index, cmpIndex, size)
 
-				if maxCmpLength < length && index-cmpIndex < LZ77MaxWindowsSize {
+				if maxCmpLength < length && index-cmpIndex < MaxWindowsSize {
 					maxCmpLength = length
 					maxCmpStart = cmpIndex
 				}
 
-				cmpIndex = prevIndex[cmpIndex&LZ77WindowsMask]
+				cmpIndex = prevIndex[cmpIndex&WindowsMask]
 				if cmpIndex == 0 {
 					break
 				}
 				//fmt.Printf("luup %v %v\n", cmpIndex, prevIndex[cmpIndex & LZ77_WindowsMask])
 				maxCmpNumber++
 				//限制匹配次数 不做判断会造成死循环
-				if maxCmpNumber >= LZ77MaxCmpNum {
+				if maxCmpNumber >= MaxCmpNum {
 					break
 				}
 			}
 
 			//还是没有匹配到 或者 匹配到的是hash冲突的字段
-			if maxCmpLength < LZ77MinCmpSize {
+			if maxCmpLength < MinCmpSize {
 				result = append(result, uint16(bytes[index]))
 				cl2.AddElement(uint16(bytes[index]), false)
 				index++
