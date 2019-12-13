@@ -7,56 +7,86 @@ import (
 )
 
 func TestGetLowBit32(t *testing.T) {
-	num := uint32(0x2107)
-	//10 0001 0000 0111
-	if GetLowBit32(num, 0) != 1 ||
-		GetLowBit32(num, 1) != 1 ||
-		GetLowBit32(num, 2) != 1 ||
-		GetLowBit32(num, 3) != 0 ||
-		GetLowBit32(num, 4) != 0 ||
-		GetLowBit32(num, 5) != 0 ||
-		GetLowBit32(num, 6) != 0 ||
-		GetLowBit32(num, 7) != 0 ||
-		GetLowBit32(num, 9) != 0 ||
-		GetLowBit32(num, 13) != 1 ||
-		GetLowBit32(num, 8) != 1 {
-
-		t.Errorf("GetLowBit32 falied")
+	tests := []struct {
+		in       uint
+		expected byte
+	}{
+		{0, 1},
+		{1, 1},
+		{2, 1},
+		{3, 0},
+		{4, 0},
+		{5, 0},
+		{6, 0},
+		{7, 0},
+		{13, 1},
+		{8, 1},
+	}
+	for _, tt := range tests {
+		t.Run("", func(t *testing.T) {
+			// 10 0001 0000 0111
+			if out := GetLowBit32(0x2107, tt.in); out != tt.expected {
+				t.Errorf("expected (%v) but got (%v)", tt.expected, out)
+			}
+		})
 	}
 }
 
 func TestGetHighBit8(t *testing.T) {
 	var i int
 	fmt.Printf("sizeof %v\n", unsafe.Sizeof(i))
-	//0xB6
-	//1011 0110
-	if GetHighBit8(0xB6, 0) != 1 ||
-		GetHighBit8(0xB6, 1) != 0 ||
-		GetHighBit8(0xB6, 2) != 1 ||
-		GetHighBit8(0xB6, 3) != 1 ||
-		GetHighBit8(0xB6, 4) != 0 ||
-		GetHighBit8(0xB6, 5) != 1 ||
-		GetHighBit8(0xB6, 6) != 1 ||
-		GetHighBit8(0xB6, 7) != 0 {
-		t.Errorf("GetHighBit8 failed")
+
+	tests := []struct {
+		in       uint32
+		expected byte
+	}{
+		{0, 1},
+		{1, 0},
+		{2, 1},
+		{3, 1},
+		{4, 0},
+		{5, 1},
+		{6, 1},
+		{7, 0},
+	}
+	for _, tt := range tests {
+		t.Run("", func(t *testing.T) {
+			// 0xB6
+			// 1011 0110
+			if out := GetHighBit8(0xB6, tt.in); out != tt.expected {
+				t.Errorf("expected (%v) but got (%v)", tt.expected, out)
+			}
+		})
 	}
 }
 
 func TestGetUint16FromBytes(t *testing.T) {
 	bytes := []byte{255, 127, 98}
-	if value, byteLen, offset := GetUint16FromBytes(bytes, 0, 8); value != 255 || byteLen != 1 || offset != 0 {
-		t.Errorf("GetUint16FromBytes failed %v %v %v", value, byteLen, offset)
+	type output struct {
+		result uint16
+		bsl    uint32
+		offset uint32
 	}
-	if value, byteLen, offset := GetUint16FromBytes(bytes, 0, 9); value != 510 || byteLen != 1 || offset != 1 {
-		t.Errorf("GetUint16FromBytes failed %v %v %v", value, byteLen, offset)
+	tests := []struct {
+		name string
+		bf   uint32
+		len  uint16
+		out  output
+	}{
+		{"0", 0, 8, output{255, 1, 0}},
+		{"1", 0, 9, output{510, 1, 1}},
+		{"2", 0, 11, output{2043, 1, 3}},
+		{"3", 1, 8, output{254, 1, 1}},
+		{"4", 3, 11, output{2015, 1, 6}},
 	}
-	if value, byteLen, offset := GetUint16FromBytes(bytes, 0, 11); value != 2043 || byteLen != 1 || offset != 3 {
-		t.Errorf("GetUint16FromBytes failed %v %v %v", value, byteLen, offset)
-	}
-	if value, byteLen, offset := GetUint16FromBytes(bytes, 1, 8); value != 254 || byteLen != 1 || offset != 1 {
-		t.Errorf("GetUint16FromBytes failed %v %v %v", value, byteLen, offset)
-	}
-	if value, byteLen, offset := GetUint16FromBytes(bytes, 3, 11); value != 2015 || byteLen != 1 || offset != 6 {
-		t.Errorf("GetUint16FromBytes failed %v %v %v", value, byteLen, offset)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			value, byteLen, offset := GetUint16FromBytes(bytes, tt.bf, tt.len)
+			if value != tt.out.result || byteLen != tt.out.bsl || offset != tt.out.offset {
+				t.Errorf("expected (%v %v %v) but got (%v %v %v)",
+					tt.out.result, tt.out.bsl, tt.out.offset, value, byteLen, offset)
+			}
+		})
 	}
 }

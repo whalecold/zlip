@@ -53,18 +53,18 @@ func RLC(bytes []byte) []byte {
 	return bytes
 }
 
-//UnRLC unrlc
+// UnRLC ..
 func UnRLC(bytes []byte) []byte {
 	result := make([]byte, 0, RLCMaxLength)
 	for i := 0; i < len(bytes); i++ {
 		if bytes[i] == RLCSpecial {
 			tempLen := bytes[i+1]
 			for k := byte(0); k < tempLen; k++ {
-				result = append(result, RLCZero)
+				result = append(result, RLCZero) //nolint
 			}
 			i++
 		} else {
-			result = append(result, bytes[i])
+			result = append(result, bytes[i]) //nolint
 		}
 	}
 	return bytes
