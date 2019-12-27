@@ -3,14 +3,14 @@ package entrance
 import (
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"runtime"
 	"sort"
-	"sync"
 	"time"
 
+	"github.com/whalecold/zlip/pkg/entrance/scheduler"
+	"github.com/whalecold/zlip/pkg/entrance/scheduler/processor"
 	"github.com/whalecold/zlip/pkg/lz77"
 )
 
@@ -32,91 +32,48 @@ func Entrance(source, target string, decode bool) {
 	//}
 	//pprof.StartCPUProfile(f)
 	//defer pprof.StopCPUProfile()
-
 	fmt.Printf("cpu num : %v..\n", cpuNum)
-
 	flag.Parse()
 
-	ch := make(chan *Subsection, cpuNum)
+	// perform scheduler
+	sc := scheduler.New(source, processor.DecodeType, cpuNum, lz77.ChunkSize)
+	count := sc.GetChunkCount()
 
-	wg := &sync.WaitGroup{}
+	collectChan := make(chan *processor.UnitChunk, cpuNum)
+	go sc.Run(collectChan)
 
-	sFile, err := os.Open(source)
-	defer func() {
-		if err := sFile.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	fileLock := &sync.RWMutex{}
-
-	reqChan := make(chan *TaskInfo, cpuNum)
-	chPool := make([]chan *TaskInfo, cpuNum)
-	for i := 0; i < cpuNum; i++ {
-		chPool[i] = make(chan *TaskInfo)
-	}
-
-	var index int64
-	if !decode {
-		fileSize, err := sFile.Seek(0, io.SeekEnd)
-		if err != nil {
-			panic(err)
-		}
-		if _, err := sFile.Seek(0, io.SeekStart); err != nil {
-			panic(err)
-		}
-		index = fileSize / lz77.ChunkSize
-		if fileSize%lz77.ChunkSize != 0 {
-			index++
-		}
-		wg.Add(1)
-		go dispatcher(reqChan, wg, cpuNum, fileSize, lz77.ChunkSize)
-		for i := 0; i < cpuNum; i++ {
-			wg.Add(1)
-			go compressTask(sFile, wg, ch, chPool[i], reqChan, lz77.ChunkSize, fileLock)
-		}
-
-	} else {
-		wg.Add(1)
-		go dispatcherUn(reqChan, wg, cpuNum, sFile, ch)
-
-		for i := 0; i < cpuNum; i++ {
-			wg.Add(1)
-			go unCompressTask(wg, ch, chPool[i], reqChan)
-		}
-
-	}
-
-	recv := make(SubsectionSlice, 0, index)
+	//collectData(count)
+	recv := make([]*processor.UnitChunk, 0, count)
 	dFile, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err.Error())
 	}
-	defer dFile.Close()
+	defer func() {
+		_ = dFile.Close()
+	}()
 
-	var lastWriteSequeue int64
-	for b := range ch {
-		recv = append(recv, b)
-		sort.Sort(recv)
+	var lastWriteSequence int64
+	for chunk := range collectChan {
+		recv = append(recv, chunk)
+		sort.Slice(recv, func(i, j int) bool {
+			return recv[i].Sequence < recv[j].Sequence
+		})
 
 		needRemove := make([]int, 0, len(recv))
 		for i, value := range recv {
-			if value.Sequence == lastWriteSequeue {
+			if value.Sequence == lastWriteSequence {
 				_, err := dFile.Write(value.Content)
 				if err != nil {
 					panic(err)
 				}
-				lastWriteSequeue++
+				lastWriteSequence++
 				needRemove = append(needRemove, i)
-				if index != 0 {
-					fmt.Printf("complete %.2f... \n", float64(lastWriteSequeue)/float64(index)*100)
+				if count != 0 {
+					fmt.Printf("complete %.2f... \n", float64(lastWriteSequence)/float64(count)*100)
 				}
 
 				//fmt.Printf("complete %v... size %v\n",  value.Sequence, len(value.Content))
-				if lastWriteSequeue == index {
+				if lastWriteSequence == count {
 					goto WriteEnd
 				}
 			} else {
@@ -135,7 +92,6 @@ WriteEnd:
 	ms := (time2 - time1) / 1e6
 	fmt.Printf("cost time %vms \n", ms)
 
-	wg.Wait()
 	memStats := new(runtime.MemStats)
 	runtime.ReadMemStats(memStats)
 	//fmt.Printf("MemStats Info %+v\n", memStats)
