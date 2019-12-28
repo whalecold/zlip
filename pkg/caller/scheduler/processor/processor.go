@@ -36,9 +36,9 @@ type Processor interface {
 	Run(wg *sync.WaitGroup, ch chan *UnitChunk)
 }
 
-func New(typ CodeType, chunkSize int64, tc chan *TaskProperty, file *os.File) Processor {
+func New(typ CodeType, chunkSize int64, tc chan *TaskProperty, file *os.File, mutex *sync.RWMutex) Processor {
 	if typ == EncodeType {
-		return newEncodeProcessor(chunkSize, tc, file)
+		return newEncodeProcessor(chunkSize, tc, file, mutex)
 	}
-	return newDecodeProcessor(chunkSize, tc, file)
+	return newDecodeProcessor(chunkSize, tc, file, mutex)
 }

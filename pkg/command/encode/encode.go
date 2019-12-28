@@ -3,8 +3,8 @@ package encode
 import (
 	"fmt"
 
-	"github.com/whalecold/zlip/pkg/entrance"
-	"github.com/whalecold/zlip/pkg/entrance/scheduler/processor"
+	"github.com/whalecold/zlip/pkg/caller"
+	"github.com/whalecold/zlip/pkg/caller/scheduler/processor"
 
 	"github.com/spf13/cobra"
 )
@@ -45,6 +45,6 @@ func (d *decodeOption) encode(args []string) error {
 		return fmt.Errorf("source or target parmer can't be empty")
 	}
 
-	entrance.Entrance(d.source, d.target, processor.EncodeType)
+	caller.Run(d.source, d.target, processor.EncodeType)
 	return nil
 }

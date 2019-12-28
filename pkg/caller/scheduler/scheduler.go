@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/whalecold/zlip/pkg/entrance/scheduler/processor"
+	"github.com/whalecold/zlip/pkg/caller/scheduler/processor"
 )
 
 type performDispatch func()
@@ -22,6 +22,8 @@ type scheduler struct {
 	chunkSize int64
 	// retainSize the data size which need to be process, zero means all data were processed.
 	retainSize int64
+	// fileSize size of file to be processed
+	fileSize int64
 	//
 	chanTask      chan *processor.TaskProperty
 	ProcessorPool []processor.Processor
@@ -30,6 +32,7 @@ type scheduler struct {
 	// dispatch the dispatch function
 	dispatch performDispatch
 	sFile    *os.File
+	mutex    *sync.RWMutex
 }
 
 // New new a processor scheduler
@@ -46,6 +49,7 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 		chanTask:      make(chan *processor.TaskProperty, num),
 		wg:            &sync.WaitGroup{},
 		sFile:         sFile,
+		mutex:         &sync.RWMutex{},
 	}
 
 	// set basic info
@@ -64,15 +68,15 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 
 	// init processor
 	for i := 0; i < num; i++ {
-		sc.ProcessorPool = append(sc.ProcessorPool, processor.New(sc.schedulerType, chunkSize, sc.chanTask, sc.sFile))
+		sc.ProcessorPool = append(sc.ProcessorPool, processor.New(sc.schedulerType, chunkSize, sc.chanTask, sc.sFile, sc.mutex))
 	}
 	return sc
 }
 
-// GetChunkCount returns the file size
+// GetChunkCount returns the chunk count
 func (sc *scheduler) GetChunkCount() int64 {
-	count := sc.retainSize / sc.chunkSize
-	if sc.retainSize%sc.chunkSize != 0 {
+	count := sc.fileSize / sc.chunkSize
+	if sc.fileSize%sc.chunkSize != 0 {
 		count++
 	}
 	return count
@@ -105,7 +109,6 @@ func (sc *scheduler) encodeDispatch() {
 			tp.ProcessSize = sc.retainSize
 			sc.retainSize = 0
 		}
-
 		// only send the task when process size is not empty
 		if tp.ProcessSize != 0 {
 			sc.chanTask <- tp
@@ -121,20 +124,27 @@ func (sc *scheduler) decodeDispatch() {
 	var offset int64
 	for index := int64(0); ; index++ {
 		temp := make([]byte, 4)
-		if _, err := sc.sFile.Seek(offset, io.SeekStart); err != nil {
-			panic(err)
-		}
 
-		// read head info to the temp
-		l, err := sc.sFile.Read(temp)
-		if err != nil && err == io.EOF {
+		if func() bool {
+			sc.mutex.Lock()
+			defer sc.mutex.Unlock()
+			if _, err := sc.sFile.Seek(offset, io.SeekStart); err != nil {
+				panic(err)
+			}
+			// read head info to the temp
+			l, err := sc.sFile.Read(temp)
+			if err == io.EOF {
+				return true
+			}
+			if err != nil {
+				panic(err)
+			}
+			if l != 4 {
+				panic(fmt.Errorf("expected length 4 but get %v", l))
+			}
+			return false
+		}() {
 			break
-		}
-		if l != 4 {
-			panic(fmt.Errorf("expected length 4 but get %v", l))
-		}
-		if err != nil {
-			panic(err)
 		}
 		offset += 4
 		tp := &processor.TaskProperty{
@@ -142,7 +152,6 @@ func (sc *scheduler) decodeDispatch() {
 			Offset:      offset,
 			ProcessSize: int64(binary.BigEndian.Uint32(temp)),
 		}
-
 		sc.chanTask <- tp
 		offset += tp.ProcessSize
 	}

@@ -2,6 +2,7 @@ package processor
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -9,11 +10,12 @@ import (
 	"github.com/whalecold/zlip/pkg/lz77"
 )
 
-func newEncodeProcessor(chunkSize int64, tc chan *TaskProperty, file *os.File) Processor {
+func newEncodeProcessor(chunkSize int64, tc chan *TaskProperty, file *os.File, mutex *sync.RWMutex) Processor {
 	return &encodeProcessor{
 		chanTask:  tc,
 		chunkSize: chunkSize,
 		sFile:     file,
+		mutex:     mutex,
 	}
 }
 
@@ -21,6 +23,7 @@ type encodeProcessor struct {
 	chanTask  chan *TaskProperty
 	chunkSize int64
 	sFile     *os.File
+	mutex     *sync.RWMutex
 }
 
 func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
@@ -35,18 +38,31 @@ func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
 			panic("error t.ProcessSize")
 		}
 
-		// reset start seek
-		_, err := en.sFile.Seek(t.Offset, io.SeekStart)
-		if err != nil {
-			panic(err)
-		}
-
-		// read data from file
 		readBuffer := cache[:t.ProcessSize]
-		if l, err := en.sFile.Read(readBuffer); err != nil || int64(l) != t.ProcessSize {
-			panic(err)
-		}
+		if func() bool {
+			en.mutex.Lock()
+			defer en.mutex.Unlock()
+			// reset start seek
+			_, err := en.sFile.Seek(t.Offset, io.SeekStart)
+			if err != nil {
+				panic(err)
+			}
 
+			// read data from file
+			l, err := en.sFile.Read(readBuffer)
+			if err == io.EOF {
+				return true
+			}
+			if err != nil {
+				panic(err)
+			}
+			if int64(l) != t.ProcessSize {
+				panic(fmt.Errorf("expectd %v but get %v", t.ProcessSize, l))
+			}
+			return false
+		}() {
+			break
+		}
 		// perform compress
 		result := encodeBuffer[:0]
 		chunk.Content, _ = lz77.Compress(readBuffer, &result, uint64(t.ProcessSize))
