@@ -27,7 +27,9 @@ type scheduler struct {
 	// dispatch the dispatch function
 	dispatch performDispatch
 	sFile    *os.File
-	mutex    *sync.RWMutex
+	// mutex file lock, avoid access sFile concurrently
+	// TODO replace file lock
+	mutex *sync.RWMutex
 
 	collectChan chan *processor.UnitChunk
 }
