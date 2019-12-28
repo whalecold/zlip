@@ -3,9 +3,10 @@ package encode
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/whalecold/zlip/pkg/entrance"
+	"github.com/whalecold/zlip/pkg/entrance/scheduler/processor"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -44,6 +45,6 @@ func (d *decodeOption) encode(args []string) error {
 		return fmt.Errorf("source or target parmer can't be empty")
 	}
 
-	entrance.Entrance(d.source, d.target, false)
+	entrance.Entrance(d.source, d.target, processor.EncodeType)
 	return nil
 }

@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -45,7 +46,6 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 		chanTask:      make(chan *processor.TaskProperty, num),
 		wg:            &sync.WaitGroup{},
 		sFile:         sFile,
-		ProcessorPool: make([]processor.Processor, 0, num),
 	}
 
 	// set basic info
@@ -127,11 +127,11 @@ func (sc *scheduler) decodeDispatch() {
 
 		// read head info to the temp
 		l, err := sc.sFile.Read(temp)
-		if l != 4 {
-			panic("should get length 4")
-		}
 		if err != nil && err == io.EOF {
 			break
+		}
+		if l != 4 {
+			panic(fmt.Errorf("expected length 4 but get %v", l))
 		}
 		if err != nil {
 			panic(err)

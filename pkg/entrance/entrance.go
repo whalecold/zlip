@@ -15,7 +15,7 @@ import (
 )
 
 // Entrance entrance
-func Entrance(source, target string, decode bool) {
+func Entrance(source, target string, codeType processor.CodeType) {
 	go func() {
 		if err := http.ListenAndServe("0.0.0.0:8000", nil); err != nil {
 			panic(err)
@@ -36,58 +36,14 @@ func Entrance(source, target string, decode bool) {
 	flag.Parse()
 
 	// perform scheduler
-	sc := scheduler.New(source, processor.DecodeType, cpuNum, lz77.ChunkSize)
+	sc := scheduler.New(source, codeType, cpuNum, lz77.ChunkSize)
 	count := sc.GetChunkCount()
 
 	collectChan := make(chan *processor.UnitChunk, cpuNum)
 	go sc.Run(collectChan)
 
-	//collectData(count)
-	recv := make([]*processor.UnitChunk, 0, count)
-	dFile, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer func() {
-		_ = dFile.Close()
-	}()
+	collectData(count, target, collectChan)
 
-	var lastWriteSequence int64
-	for chunk := range collectChan {
-		recv = append(recv, chunk)
-		sort.Slice(recv, func(i, j int) bool {
-			return recv[i].Sequence < recv[j].Sequence
-		})
-
-		needRemove := make([]int, 0, len(recv))
-		for i, value := range recv {
-			if value.Sequence == lastWriteSequence {
-				_, err := dFile.Write(value.Content)
-				if err != nil {
-					panic(err)
-				}
-				lastWriteSequence++
-				needRemove = append(needRemove, i)
-				if count != 0 {
-					fmt.Printf("complete %.2f... \n", float64(lastWriteSequence)/float64(count)*100)
-				}
-
-				//fmt.Printf("complete %v... size %v\n",  value.Sequence, len(value.Content))
-				if lastWriteSequence == count {
-					goto WriteEnd
-				}
-			} else {
-				break
-			}
-		}
-
-		if len(needRemove) != 0 {
-			for i := len(needRemove); i > 0; i-- {
-				recv = append(recv[:i-1], recv[i:]...)
-			}
-		}
-	}
-WriteEnd:
 	time2 := time.Now().UnixNano()
 	ms := (time2 - time1) / 1e6
 	fmt.Printf("cost time %vms \n", ms)
@@ -98,4 +54,39 @@ WriteEnd:
 	fmt.Printf("MemStats Alloc %+v\n", memStats.Alloc)
 	fmt.Printf("MemStats HeapAlloc %+v\n", memStats.HeapAlloc)
 	fmt.Printf("MemStats HeapSys %+v\n", memStats.HeapSys)
+}
+
+func collectData(count int64, target string, cc chan *processor.UnitChunk) {
+	// open the file
+	dFile, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer func() {
+		_ = dFile.Close()
+	}()
+
+	// the next write sequence
+	var writeSequence int64
+	chunkSlice := make([]*processor.UnitChunk, 0, count)
+	for chunk := range cc {
+		// receive the data and sort out
+		chunkSlice = append(chunkSlice, chunk)
+		sort.Slice(chunkSlice, func(i, j int) bool {
+			return chunkSlice[i].Sequence < chunkSlice[j].Sequence
+		})
+
+		for i, value := range chunkSlice {
+			if value.Sequence == writeSequence {
+				_, err := dFile.Write(value.Content)
+				if err != nil {
+					panic(err)
+				}
+				writeSequence++
+			} else {
+				// remove the data which is written to file
+				chunkSlice = chunkSlice[i:]
+			}
+		}
+	}
 }

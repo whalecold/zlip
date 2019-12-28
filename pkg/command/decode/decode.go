@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/whalecold/zlip/pkg/entrance"
+	"github.com/whalecold/zlip/pkg/entrance/scheduler/processor"
 
 	"github.com/spf13/cobra"
 )
@@ -44,6 +45,6 @@ func (d *decodeOption) decode(args []string) error {
 		return fmt.Errorf("source or target parmer can't be empty")
 	}
 
-	entrance.Entrance(d.source, d.target, true)
+	entrance.Entrance(d.source, d.target, processor.DecodeType)
 	return nil
 }

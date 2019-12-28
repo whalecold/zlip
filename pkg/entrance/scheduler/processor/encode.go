@@ -10,7 +10,11 @@ import (
 )
 
 func newEncodeProcessor(chunkSize int64, tc chan *TaskProperty, file *os.File) Processor {
-	return nil
+	return &encodeProcessor{
+		chanTask:  tc,
+		chunkSize: chunkSize,
+		sFile:     file,
+	}
 }
 
 type encodeProcessor struct {
