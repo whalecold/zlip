@@ -58,12 +58,7 @@ func (de *decodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
 		}() {
 			break
 		}
-		//outputBuffer := unCompressBuffer[:0]
-
-		//temp  := lz77.UnCompress(t.UnCompress[:t.ReadLen])
-		//chunk.Content = *utils.DeepClone(&temp).(*[]byte)
 		chunk.Content = lz77.UnCompress(readBuffer)
-		//fmt.Printf("t --- %v  index %v 00 %v\n", len(t.UnCompress[:t.ReadLen]), t.Index, len(chunk.Content))
 		ch <- chunk
 	}
 	wg.Done()
