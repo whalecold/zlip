@@ -12,10 +12,7 @@ const (
 	DecodeType CodeType = "decode"
 )
 
-// UnitChunk the whole data will be separated into several chunks by fixed size, the scheduler dispatches
-// those chunks to processors, the processors performer task parallel. After processing the data, scheduler will
-// collects and sorts out the result. The out data may be out of order as the parallel performing, so we need mark sequence
-// to every chunk for ordering result.
+// UnitChunk the whole data will be separated into several chunks by fixed size.
 type UnitChunk struct {
 	// Sequence sequence of chunk
 	Sequence int64

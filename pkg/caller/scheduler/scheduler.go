@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"sync"
 
 	"github.com/whalecold/zlip/pkg/caller/scheduler/processor"
@@ -12,7 +13,7 @@ import (
 
 type performDispatch func()
 
-// scheduler processor scheduler
+// scheduler simple implement of performer processor parallel.
 type scheduler struct {
 	// schedulerType the task type
 	schedulerType processor.CodeType
@@ -33,6 +34,8 @@ type scheduler struct {
 	dispatch performDispatch
 	sFile    *os.File
 	mutex    *sync.RWMutex
+
+	collectChan chan *processor.UnitChunk
 }
 
 // New new a processor scheduler
@@ -50,6 +53,7 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 		wg:            &sync.WaitGroup{},
 		sFile:         sFile,
 		mutex:         &sync.RWMutex{},
+		collectChan:   make(chan *processor.UnitChunk, num),
 	}
 
 	// set basic info
@@ -60,6 +64,7 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 			panic(err)
 		}
 		sc.retainSize = sInfo.Size()
+		sc.fileSize = sc.retainSize
 	} else if typ == processor.DecodeType {
 		sc.dispatch = sc.decodeDispatch
 	} else {
@@ -73,8 +78,8 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 	return sc
 }
 
-// GetChunkCount returns the chunk count
-func (sc *scheduler) GetChunkCount() int64 {
+// getChunkCount returns the chunk count
+func (sc *scheduler) getChunkCount() int64 {
 	count := sc.fileSize / sc.chunkSize
 	if sc.fileSize%sc.chunkSize != 0 {
 		count++
@@ -82,14 +87,14 @@ func (sc *scheduler) GetChunkCount() int64 {
 	return count
 }
 
-func (sc *scheduler) Run(ch chan *processor.UnitChunk) {
+func (sc *scheduler) Run() {
 	go sc.dispatch()
 	for i := range sc.ProcessorPool {
 		sc.wg.Add(1)
-		go sc.ProcessorPool[i].Run(sc.wg, ch)
+		go sc.ProcessorPool[i].Run(sc.wg, sc.collectChan)
 	}
 	sc.wg.Wait()
-	close(ch)
+	close(sc.collectChan)
 	_ = sc.sFile.Close()
 }
 
@@ -156,4 +161,42 @@ func (sc *scheduler) decodeDispatch() {
 		offset += tp.ProcessSize
 	}
 	close(sc.chanTask)
+}
+
+// CollectData collects the data from processors and write them to the target file in order.
+func (sc *scheduler) CollectData(tFile string) {
+	// open the file
+	dFile, err := os.OpenFile(tFile, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer func() {
+		_ = dFile.Close()
+	}()
+
+	// the next write sequence
+	var writeSequence int64
+	// chunk slice to store the data from processors
+	cs := make([]*processor.UnitChunk, 0, sc.getChunkCount())
+	for chunk := range sc.collectChan {
+		// receive the data and sort out
+		cs = append(cs, chunk)
+		sort.Slice(cs, func(i, j int) bool {
+			return cs[i].Sequence < cs[j].Sequence
+		})
+
+		for i, value := range cs {
+			// write data to file in order
+			if value.Sequence == writeSequence {
+				_, err := dFile.Write(value.Content)
+				if err != nil {
+					panic(err)
+				}
+				writeSequence++
+			} else {
+				// remove the data which is written to file
+				cs = cs[i:]
+			}
+		}
+	}
 }
