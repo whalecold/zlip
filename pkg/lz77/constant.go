@@ -22,6 +22,8 @@ const (
 	// ChunkSize separates the whole file into several chunks and every chunk's length is ChunkSize.
 	// Avoid the file size is too large to occupy to many memory and we can do parallel processing with several chunks.
 	ChunkSize = 1024 * 1024 * 5
+	// HeadSize the size of head info
+	HeadSize = 4
 )
 
 const (

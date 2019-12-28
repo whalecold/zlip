@@ -68,7 +68,7 @@ func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
 		chunk.Content, _ = lz77.Compress(readBuffer, &result, uint64(t.ProcessSize))
 
 		// add metadata info to the head
-		lenInfo := make([]byte, 4)
+		lenInfo := make([]byte, lz77.HeadSize)
 		binary.BigEndian.PutUint32(lenInfo, uint32(len(chunk.Content)))
 		chunk.Content = append(lenInfo, chunk.Content...)
 		ch <- chunk
