@@ -27,6 +27,7 @@ type encodeProcessor struct {
 }
 
 func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
+	defer wg.Done()
 	// buffer to store task data
 	cache := make([]byte, en.chunkSize)
 	// stores the compressing result
@@ -73,5 +74,4 @@ func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
 		chunk.Content = append(lenInfo, chunk.Content...)
 		ch <- chunk
 	}
-	wg.Done()
 }

@@ -189,18 +189,17 @@ func (deflate *DeflateTree) UnSerializeBitsStream(bits []byte) {
 // BuildTreeByMap build tree
 // 根据码表map建立deflate树
 func (deflate *DeflateTree) BuildTreeByMap() {
-	deflate.node = buildDeflatTreeByMap(deflate.huffmanSlice)
+	deflate.node = buildDeflateTreeByMap(deflate.huffmanSlice)
 }
 
-//Print print
+// Print print function
 func (deflate *DeflateTree) Print() {
-	//fmt.Printf("start ")
 	for k, v := range deflate.huffmanSlice {
 		fmt.Printf("%v -- %b\n", k, v)
 	}
 }
 
-//Equal equal
+// Equal compares other tree with self, return true if is equal.
 func (deflate *DeflateTree) Equal(other *DeflateTree) bool {
 	if deflate.huffmanSlice == nil || other.huffmanSlice == nil {
 		return false
@@ -208,9 +207,6 @@ func (deflate *DeflateTree) Equal(other *DeflateTree) bool {
 
 	for key, bytes := range deflate.huffmanSlice {
 		obytes := other.huffmanSlice[key]
-		//if !ok {
-		//	return false
-		//}
 		if len(bytes) != len(obytes) {
 			return false
 		}

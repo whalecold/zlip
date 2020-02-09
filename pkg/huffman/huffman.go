@@ -1,9 +1,8 @@
 package huffman
 
 import (
-	"sort"
-
 	"container/list"
+	"sort"
 
 	"github.com/whalecold/zlip/pkg/utils"
 )
@@ -218,8 +217,8 @@ func buildHuffmanTree(bytes []byte) *Node {
 func buildCodeMapByBits(bits []byte) [][]byte {
 
 	m := make([][]byte, len(bits))
-	deepth := getMaxDeepth(bits)
-	streamTemp := make([][]uint16, deepth+1)
+	depth := getMaxDeepth(bits)
+	streamTemp := make([][]uint16, depth+1)
 	for l := 0; l < len(streamTemp); l++ {
 		streamTemp[l] = make([]uint16, 0, 32)
 	}
@@ -256,8 +255,8 @@ func buildCodeMapByBits(bits []byte) [][]byte {
 	return m
 }
 
-// buildDeflatTreeByMap generator a deflate tree by map
-func buildDeflatTreeByMap(m [][]byte) *Node {
+// buildDeflateTreeByMap generator a deflate tree by map
+func buildDeflateTreeByMap(m [][]byte) *Node {
 	root := &Node{}
 	var temp *Node
 	for k, v := range m {
@@ -265,10 +264,10 @@ func buildDeflatTreeByMap(m [][]byte) *Node {
 		for index, bit := range v {
 			if bit == 0 {
 				if temp.LeftTree != nil && index == len(v)-1 {
-					panic("buildDeflatTreeByMap error LeftTree")
+					panic("buildDeflateTreeByMap error LeftTree")
 				}
 				if temp.LeftTree != nil && index != len(v)-1 && temp.LeftTree.Leaf {
-					panic("buildDeflatTreeByMap error LeftTree 2")
+					panic("buildDeflateTreeByMap error LeftTree 2")
 				}
 				if temp.LeftTree != nil {
 					temp = temp.LeftTree
@@ -283,10 +282,10 @@ func buildDeflatTreeByMap(m [][]byte) *Node {
 				}
 			} else if bit == 1 {
 				if temp.RightTree != nil && index == len(v)-1 {
-					panic("buildDeflatTreeByMap error RightTree")
+					panic("buildDeflateTreeByMap error RightTree")
 				}
 				if temp.RightTree != nil && index != len(v)-1 && temp.RightTree.Leaf {
-					panic("buildDeflatTreeByMap error RightTree 2")
+					panic("buildDeflateTreeByMap error RightTree 2")
 				}
 				if temp.RightTree != nil {
 					temp = temp.RightTree
@@ -300,7 +299,7 @@ func buildDeflatTreeByMap(m [][]byte) *Node {
 					}
 				}
 			} else {
-				panic("buildDeflatTreeByMap error")
+				panic("buildDeflateTreeByMap error")
 			}
 		}
 	}

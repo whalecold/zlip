@@ -5,16 +5,19 @@ import (
 	"github.com/whalecold/zlip/pkg/utils"
 )
 
-// Node huffmannode
+// Node huffman node
 type Node struct {
-	Power     int32 //权重 叶子节点相当于出现次数
+	// Power the occurrences number of this node, bigger value means more proportion
+	// among whole node, and the Value will dispatched less code.
+	Power     int32
 	Value     uint16
 	LeftTree  *Node
 	RightTree *Node
-	Leaf      bool //表示是否是叶子节点
+	// Leaf true means this node is left node.
+	Leaf bool //表示是否是叶子节点
 }
 
-//NodeSlice slice
+// NodeSlice implement sort interface
 type NodeSlice []*Node
 
 func (h NodeSlice) Less(i, j int) bool {
@@ -32,11 +35,8 @@ func (h NodeSlice) Len() int {
 	return len(h)
 }
 
-//CodeMap map
+// CodeMap map
 type CodeMap map[byte][]byte
-
-//DeflateCodeMap deflatecodemap
-type DeflateCodeMap map[uint16][]byte
 
 //return 匹配到的byte | 移动的bit位数 | bytes偏移位数 | bit偏移位数(范围0-7)
 func (huff *Node) decodeByteFromHuffman(bytes []byte, bitOffset uint32) (byte, uint32, uint32, uint32) {

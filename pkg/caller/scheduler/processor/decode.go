@@ -26,6 +26,7 @@ type decodeProcessor struct {
 }
 
 func (de *decodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
+	defer wg.Done()
 	// buffer to store task data
 	cache := make([]byte, de.chunkSize*2)
 	for t := range de.taskChan {
@@ -61,5 +62,4 @@ func (de *decodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
 		chunk.Content = lz77.UnCompress(readBuffer)
 		ch <- chunk
 	}
-	wg.Done()
 }
