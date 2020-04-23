@@ -1,5 +1,6 @@
 package huffman
 
+// TODO to be implemented
 // CCl no use
 type CCl struct {
 }
@@ -17,5 +18,5 @@ func (l *CCl) GetSourceCode(code uint16) (uint16, uint16, bool) {
 
 //GetBitsLen nil
 func (l *CCl) GetBitsLen() int {
-	return HUFFMANCCLLen + 2
+	return CCLLen + 2
 }

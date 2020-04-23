@@ -13,10 +13,10 @@ func dealWithBytesAndStack(stackNode *stack.Stack, r *[]byte) {
 	}
 	if temp[0] == RLCZero && len(temp) >= RLCLength {
 		tempLen := len(temp)
-		for tempLen > huffman.HUFFMANCCLLen {
+		for tempLen > huffman.CCLLen {
 			*r = append(*r, RLCSpecial)
-			*r = append(*r, huffman.HUFFMANCCLLen)
-			tempLen -= huffman.HUFFMANCCLLen
+			*r = append(*r, huffman.CCLLen)
+			tempLen -= huffman.CCLLen
 		}
 
 		if tempLen != 0 {

@@ -8,7 +8,7 @@ import (
 //EnCode encode
 func EnCode(bytes []byte) []byte {
 
-	root := buildHuffmanTree(bytes)
+	root := buildHuffmanTreeFromBytes(bytes)
 	serial := root.serializeTree()
 	m := root.transTreeToHuffmanCodeMap()
 

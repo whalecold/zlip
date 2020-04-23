@@ -2,7 +2,6 @@ package huffman
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/whalecold/zlip/pkg/utils"
 )
@@ -27,11 +26,11 @@ type DeflateCommon interface {
 
 //DeflateTree deflate tree
 type DeflateTree struct {
-	//m map[uint16]*Node 	//这个是距离出现次数的映射表
-	elementSlice []*Node  //优化压缩耗时
-	huffmanSlice [][]byte //这个是区间码到huffman字节码的映射表
-	node         *Node    //deflate树的根节点
-	bits         []byte   //deflate树转成bits流的长度 用来存文件
+	//m map[uint16]*treeNode 	//这个是距离出现次数的映射表
+	elementSlice []*treeNode //优化压缩耗时
+	huffmanSlice [][]byte    //这个是区间码到huffman字节码的映射表
+	node         *treeNode   //deflate树的根节点
+	bits         []byte      //deflate树转成bits流的长度 用来存文件
 	condition    DeflateCommon
 }
 
@@ -47,8 +46,8 @@ func (deflate *DeflateTree) GetBits() []byte {
 
 //Init  init
 func (deflate *DeflateTree) Init() {
-	//deflat.m = make(map[uint16]*Node)
-	deflate.elementSlice = make([]*Node, deflate.condition.GetBitsLen())
+	//deflat.m = make(map[uint16]*treeNode)
+	deflate.elementSlice = make([]*treeNode, deflate.condition.GetBitsLen())
 	deflate.huffmanSlice = make([][]byte, deflate.condition.GetBitsLen())
 }
 
@@ -60,7 +59,7 @@ func (deflate *DeflateTree) AddElement(element uint16, length bool) {
 	//fmt.Printf("zone-------- %v\n", zone)
 	ele := deflate.elementSlice[zone]
 	if ele == nil {
-		deflate.elementSlice[zone] = &Node{
+		deflate.elementSlice[zone] = &treeNode{
 			Power:     1,
 			Value:     zone,
 			LeftTree:  nil,
@@ -73,7 +72,7 @@ func (deflate *DeflateTree) AddElement(element uint16, length bool) {
 	//if m, ok := deflate.m[zone]; ok {
 	//	m.Power++
 	//} else {
-	//	deflate.m[zone] = &Node{
+	//	deflate.m[zone] = &treeNode{
 	//		Power: 1,
 	//		Value: zone,
 	//		LeftTree: nil,
@@ -86,7 +85,7 @@ func (deflate *DeflateTree) AddElement(element uint16, length bool) {
 //BuildTree build tree
 //建立deflate树
 func (deflate *DeflateTree) BuildTree() {
-	huffmanSlice := make(NodeSlice, 0, len(deflate.elementSlice))
+	huffmanSlice := make([]*treeNode, 0, len(deflate.elementSlice))
 	//for _, v := range deflate.m {
 	//	huffmanSlice = append(huffmanSlice, v)
 	//}
@@ -95,8 +94,7 @@ func (deflate *DeflateTree) BuildTree() {
 			huffmanSlice = append(huffmanSlice, v)
 		}
 	}
-	sort.Sort(huffmanSlice)
-	deflate.node = buildTree(huffmanSlice)
+	deflate.node = buildTreeFromNodes(huffmanSlice)
 }
 
 //SerializeBitsStream serial bits
@@ -183,13 +181,13 @@ func (deflate *DeflateTree) UnSerializeBitsStream(bits []byte) {
 	if len(bits) != deflate.condition.GetBitsLen() {
 		panic(fmt.Sprintf("BuildTreeByBits error length %v shoud be %v", len(bits), deflate.condition.GetBitsLen()))
 	}
-	deflate.huffmanSlice = buildCodeMapByBits(bits)
+	deflate.huffmanSlice = buildCodeMapFromBits(bits)
 }
 
 // BuildTreeByMap build tree
 // 根据码表map建立deflate树
 func (deflate *DeflateTree) BuildTreeByMap() {
-	deflate.node = buildDeflateTreeByMap(deflate.huffmanSlice)
+	deflate.node = buildDeflateTreeFromMap(deflate.huffmanSlice)
 }
 
 // Print print function

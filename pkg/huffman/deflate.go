@@ -75,7 +75,7 @@ func GetLengthByData(zone uint16) (uint16, uint16) {
 	return getDataByZone(zone, LengthZone)
 }
 
-func getMaxDeepth(bits []byte) int {
+func getMaxDepth(bits []byte) int {
 	var max byte
 	for _, value := range bits {
 		if value > max {

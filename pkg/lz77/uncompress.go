@@ -13,7 +13,7 @@ func unCompressSQSub(buffer []byte, h *huffman.Alg) []byte {
 		getData, r, b, _ := h.DecodeEle(buffer[byteOffset:], bitOffset)
 		byteOffset += r
 		bitOffset = b
-		if getData == huffman.HUFFMANCCLEndFlag {
+		if getData == huffman.CCLEndFlag {
 			break
 		}
 		lastResult = append(lastResult, byte(getData))

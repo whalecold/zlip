@@ -25,7 +25,7 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	}
 	//bytes = append(bytes, LZ77_EndFlag)
 
-	cl2.AddElement(huffman.HUFFMANEndFlag, false)
+	cl2.AddElement(huffman.EndFlag, false)
 	//小于三个字节
 	var index uint64
 	for index = MinCmpSize; index+MinCmpSize <= size; {
@@ -107,7 +107,7 @@ func compressCl(bytes []byte, size uint64) ([]byte, []byte, []byte) {
 	var indexCode uint64
 	var bit uint32
 
-	result = append(result, huffman.HUFFMANEndFlag)
+	result = append(result, huffman.EndFlag)
 	for i := 0; i < len(result); i++ {
 		//表示长度
 		if utils.GetHighBit16(result[i], 0) == 1 {
@@ -151,12 +151,12 @@ func compressCCl(cl1 []byte, cl2 []byte) ([]byte, []byte, []byte) {
 	for _, value := range cl2 {
 		ccl.AddElement(uint16(value), false)
 	}
-	ccl.AddElement(huffman.HUFFMANCCLEndFlag, false)
+	ccl.AddElement(huffman.CCLEndFlag, false)
 
 	ccl.BuildHuffmanMap()
 
-	cl1 = append(cl1, huffman.HUFFMANCCLEndFlag)
-	cl2 = append(cl2, huffman.HUFFMANCCLEndFlag)
+	cl1 = append(cl1, huffman.CCLEndFlag)
+	cl2 = append(cl2, huffman.CCLEndFlag)
 
 	sq1 := compressCClSub(cl1, ccl)
 	sq2 := compressCClSub(cl2, ccl)

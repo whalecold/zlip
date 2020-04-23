@@ -172,7 +172,7 @@ func UnCompress(bytes []byte) []byte {
 			for i := uint64(0); i < length; i++ {
 				outBuffer = append(outBuffer, outBuffer[nowLen-uint64(getData)+i])
 			}
-		} else if getData == huffman.HUFFMANEndFlag {
+		} else if getData == huffman.EndFlag {
 			//fmt.Printf("end buffer \n")
 			break
 		} else {
