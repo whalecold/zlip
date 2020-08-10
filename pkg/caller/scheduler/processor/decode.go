@@ -25,12 +25,12 @@ type decodeProcessor struct {
 	mutex     *sync.RWMutex
 }
 
-func (de *decodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
+func (de *decodeProcessor) Run(wg *sync.WaitGroup, ch chan *DataChunk) {
 	defer wg.Done()
 	// buffer to store task data
 	cache := make([]byte, de.chunkSize*2)
 	for t := range de.taskChan {
-		chunk := &UnitChunk{Sequence: t.Index}
+		chunk := &DataChunk{Sequence: t.Index}
 		if t.ProcessSize > int64(len(cache)) {
 			cache = make([]byte, t.ProcessSize)
 		}

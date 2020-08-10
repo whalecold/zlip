@@ -26,7 +26,7 @@ type encodeProcessor struct {
 	mutex     *sync.RWMutex
 }
 
-func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
+func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *DataChunk) {
 	defer wg.Done()
 	// buffer to store task data
 	cache := make([]byte, en.chunkSize)
@@ -34,7 +34,7 @@ func (en *encodeProcessor) Run(wg *sync.WaitGroup, ch chan *UnitChunk) {
 	encodeBuffer := make([]byte, en.chunkSize)
 	for t := range en.chanTask {
 
-		chunk := &UnitChunk{Sequence: t.Index}
+		chunk := &DataChunk{Sequence: t.Index}
 		if t.ProcessSize > en.chunkSize {
 			panic("error t.ProcessSize")
 		}

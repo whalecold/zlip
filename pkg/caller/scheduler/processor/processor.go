@@ -12,8 +12,8 @@ const (
 	DecodeType CodeType = "decode"
 )
 
-// UnitChunk the whole data will be separated into several chunks by fixed size.
-type UnitChunk struct {
+// DataChunk the whole data will be separated into several chunks by fixed size.
+type DataChunk struct {
 	// Sequence sequence of chunk
 	Sequence int64
 	Content  []byte
@@ -27,10 +27,6 @@ type TaskProperty struct {
 	ProcessSize int64
 	// Index the task index
 	Index int64
-}
-
-type Processor interface {
-	Run(wg *sync.WaitGroup, ch chan *UnitChunk)
 }
 
 func New(typ CodeType, chunkSize int64, tc chan *TaskProperty, file *os.File, mutex *sync.RWMutex) Processor {

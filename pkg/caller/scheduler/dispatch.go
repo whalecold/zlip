@@ -10,7 +10,7 @@ import (
 	"github.com/whalecold/zlip/pkg/caller/scheduler/processor"
 )
 
-type performDispatch func()
+type dispatchFn func()
 
 func (sc *scheduler) encodeDispatch() {
 	// the data size has been processed

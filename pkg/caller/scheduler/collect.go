@@ -14,14 +14,12 @@ func (sc *scheduler) CollectData(tFile string) {
 	if err != nil {
 		panic(err.Error())
 	}
-	defer func() {
-		_ = dFile.Close()
-	}()
+	defer dFile.Close() // nolint
 
 	// the next write sequence
 	var writeSequence int64
 	// chunk slice to store the data from processors
-	cs := make([]*processor.UnitChunk, 0, sc.getChunkCount())
+	cs := make([]*processor.DataChunk, 0, sc.getChunkCount())
 	for chunk := range sc.collectChan {
 		// receive the data and sort out
 		cs = append(cs, chunk)

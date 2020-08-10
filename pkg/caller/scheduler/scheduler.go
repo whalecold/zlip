@@ -11,31 +11,28 @@ import (
 type scheduler struct {
 	// schedulerType the task type
 	schedulerType processor.CodeType
-	// processorNum the count of parallel processor
-	processorNum int
 	// chunkSize fixed chunk size, the data will separated by the size.
 	chunkSize int64
 	// retainSize the data size which need to be process, zero means all data were processed.
 	retainSize int64
 	// fileSize size of file to be processed
 	fileSize int64
-	//
-	chanTask      chan *processor.TaskProperty
-	ProcessorPool []processor.Processor
+	chanTask chan *processor.TaskProperty
+	pools    []processor.Processor
 
 	wg *sync.WaitGroup
 	// dispatch the dispatch function
-	dispatch performDispatch
+	dispatch dispatchFn
 	sFile    *os.File
 	// mutex file lock, avoid access sFile concurrently
 	// TODO replace file lock
 	mutex *sync.RWMutex
 
-	collectChan chan *processor.UnitChunk
+	collectChan chan *processor.DataChunk
 }
 
 // New new a processor scheduler
-func New(source string, typ processor.CodeType, num int, chunkSize int64) *scheduler {
+func New(source string, typ processor.CodeType, taskNum int, chunkSize int64) *scheduler {
 	sFile, err := os.Open(source)
 	if err != nil {
 		panic(err)
@@ -43,13 +40,12 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 
 	sc := &scheduler{
 		schedulerType: typ,
-		processorNum:  num,
 		chunkSize:     chunkSize,
-		chanTask:      make(chan *processor.TaskProperty, num),
+		chanTask:      make(chan *processor.TaskProperty, taskNum),
 		wg:            &sync.WaitGroup{},
 		sFile:         sFile,
 		mutex:         &sync.RWMutex{},
-		collectChan:   make(chan *processor.UnitChunk, num),
+		collectChan:   make(chan *processor.DataChunk, taskNum),
 	}
 
 	// set basic info
@@ -68,8 +64,8 @@ func New(source string, typ processor.CodeType, num int, chunkSize int64) *sched
 	}
 
 	// init processor
-	for i := 0; i < num; i++ {
-		sc.ProcessorPool = append(sc.ProcessorPool, processor.New(sc.schedulerType, chunkSize, sc.chanTask, sc.sFile, sc.mutex))
+	for i := 0; i < taskNum; i++ {
+		sc.pools = append(sc.pools, processor.New(sc.schedulerType, chunkSize, sc.chanTask, sc.sFile, sc.mutex))
 	}
 	return sc
 }
@@ -85,9 +81,9 @@ func (sc *scheduler) getChunkCount() int64 {
 
 func (sc *scheduler) Run() {
 	go sc.dispatch()
-	for i := range sc.ProcessorPool {
+	for i := range sc.pools {
 		sc.wg.Add(1)
-		go sc.ProcessorPool[i].Run(sc.wg, sc.collectChan)
+		go sc.pools[i].Run(sc.wg, sc.collectChan)
 	}
 	sc.wg.Wait()
 	close(sc.collectChan)

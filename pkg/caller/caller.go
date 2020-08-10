@@ -19,22 +19,13 @@ func Run(sFile, tFile string, codeType processor.CodeType) {
 			panic(err)
 		}
 	}()
-	cpuNum := runtime.NumCPU()
-	runtime.GOMAXPROCS(cpuNum)
+	taskNum := runtime.NumCPU()
+	runtime.GOMAXPROCS(taskNum)
 
 	time1 := time.Now().UnixNano()
-
-	//f, err := os.Create("pprof")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//pprof.StartCPUProfile(f)
-	//defer pprof.StopCPUProfile()
-	fmt.Printf("cpu num : %v..\n", cpuNum)
 	flag.Parse()
-
 	// perform scheduler
-	sc := scheduler.New(sFile, codeType, cpuNum, lz77.ChunkSize)
+	sc := scheduler.New(sFile, codeType, taskNum, lz77.ChunkSize)
 
 	go sc.Run()
 
